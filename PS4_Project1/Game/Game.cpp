@@ -1,10 +1,17 @@
+#pragma once
+
 #include "Game.h"
 #include "Common.h"
+
+#include <vector>
+#include <algorithm>
 
 using namespace Game;
 
 GameData *Game::CreateGameData() {
-	return new GameData;
+	GameData* gameData = new GameData;
+
+	return gameData;
 }
 
 RenderCommands Game::Update(Input const &input, GameData &gameData) {
@@ -18,3 +25,4 @@ RenderCommands Game::Update(Input const &input, GameData &gameData) {
 void Game::DestroyGameData(GameData* gameData) {
 	delete gameData;
 }
+
