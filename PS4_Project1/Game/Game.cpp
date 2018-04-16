@@ -14,7 +14,7 @@ GameData *Game::CreateGameData() {
 	gameData->Player.velocity = glm::vec2(0, 0);
 
 	GameObject ball;
-	ball.position = glm::vec2(0.1, 0.1);
+	ball.position = glm::vec2(10, 100);
 	ball.velocity = glm::vec2(0, 0);
 	gameData->Balls.push_back(ball);
 	

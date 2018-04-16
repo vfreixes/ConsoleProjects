@@ -423,18 +423,16 @@ void init(Game::Input &inputData, Game::GameData *&gameData, Game::RenderCommand
 	renderData.orthoWidth = screenWidth;
 	renderData.orthoHeight = screenHeight;
 
-	
-
 	//Init textures
 	rendererData.textures[(int)Game::RenderCommands::TextureNames::BALLS] = LoadTexture("ball.png");
 	rendererData.textures[(int)Game::RenderCommands::TextureNames::PLAYER] = LoadTexture("player.png");
 
-	////Init RenderData
-	//renderData.sprites.resize(2);
-	//renderData.sprites[0].position = glm::vec2(.0f, .0f);
-	//renderData.sprites[0].size = glm::vec2(20.0f, 20.0f);
-	//renderData.sprites[1].position = glm::vec2(.0f, .0f);
-	//renderData.sprites[1].size = glm::vec2(20.0f, 20.0f);
+	//Init RenderData
+	renderData.sprites.resize(2);
+	renderData.sprites[0].position = glm::vec2(.0f, .0f);
+	renderData.sprites[0].size = glm::vec2(20.0f, 20.0f);
+	renderData.sprites[1].position = glm::vec2(.0f, .0f);
+	renderData.sprites[1].size = glm::vec2(20.0f, 20.0f);
 
 	//Init Render Data
 	GLint vs = 0, ps = 0;
@@ -452,7 +450,6 @@ void init(Game::Input &inputData, Game::GameData *&gameData, Game::RenderCommand
 									// we initialize the buffer without content so we can later call "glBufferSubData". Here we are only reserving the size.
 
 		glBindBuffer(GL_UNIFORM_BUFFER, 0); // set no buffer as the current buffer
-
 
 		VertexTN vtxs[4] = {
 			{ { -0.5f, -0.5f, 0 },{ 0, 0, 1 },{ 1, 1, 1, 1 },{ 0,0 } },
@@ -474,10 +471,6 @@ void init(Game::Input &inputData, Game::GameData *&gameData, Game::RenderCommand
 	if (ps > 0)
 		glDeleteShader(ps);
 
-
-
-
-
 }
 
 
@@ -495,7 +488,7 @@ void render(RendererData &rendererData, Game::RenderCommands &renderData) {
 		glBindTexture(GL_TEXTURE_2D, rendererData.textures[(int)sprite.texture]); // get the right texture
 
 																				  // create the model matrix, with a scale and a translation.
-		glm::mat4 model = glm::translate(glm::scale(glm::mat4(1.0f), glm::vec3(sprite.position, 0)), glm::vec3(sprite.size, 0));
+		glm::mat4 model = glm::scale(glm::translate(glm::mat4(1.0f), glm::vec3(sprite.position, 0)), glm::vec3(sprite.size, 0));
 		// you may add a rotation, between the scale and the translation. rotate arround the "z" axis.
 
 		// the transform is the addition of the model transformation and the projection
