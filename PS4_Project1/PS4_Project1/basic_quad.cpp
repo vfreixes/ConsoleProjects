@@ -4,6 +4,8 @@ PlayStation(R)4 Programmer Tool Runtime Library Release 05.008.001
 * All Rights Reserved.
 */
 
+///game update liniea 580
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <scebase.h>
@@ -579,7 +581,8 @@ int main(int argc, const char *argv[])
 		Gnm::kDataFormatR32G32Float,
 		sizeof(Vertex),
 		sizeof(kVertexData) / sizeof(Vertex));
-
+	
+	//////// GameUpdate
 	for(uint32_t frameIndex = 0; frameIndex < 1000; ++frameIndex)
 	{
 		Game::Input input = {};

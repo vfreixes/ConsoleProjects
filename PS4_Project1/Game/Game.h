@@ -1,13 +1,11 @@
 #pragma once
 
+#include <vector>
+
 #include "Common.h"
 #include "glm\glm.hpp"
 
 namespace Game {
-	struct GameData
-	{
-		float positionX, positionY;
-	};
 
 	struct GameObject
 	{
@@ -16,6 +14,14 @@ namespace Game {
 
 		glm::vec2 GetExtreme(glm::vec2 dir) const { return position + dir * radi; }
 	};
+
+	struct GameData
+	{
+		GameObject Player;
+		std::vector<GameObject> Balls;
+	};
+
+	
 
 	struct PossibleCollission
 	{

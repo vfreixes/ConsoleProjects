@@ -2,6 +2,7 @@
 
 #include <cinttypes>
 #include <vector>
+#include <glm\glm.hpp>
 
 namespace Game {
 	struct  GameData;
@@ -15,12 +16,17 @@ namespace Game {
 	};
 
 	struct RenderCommands {
+		enum class TextureNames {
+			PLAYER,
+			BALLS,
+			TABLE,
+			COUNT
+		};
+
 		struct Sprite {
-			float x, y, width, height, rotation;
-			enum
-			{
-				BALL, POINT_1, POINT_2, PLAYER
-			} image;
+			glm::vec2 position, size;
+			float rotation;
+			TextureNames texture;
 		};
 
 		uint32_t orthoWidth, orthoHeight;
