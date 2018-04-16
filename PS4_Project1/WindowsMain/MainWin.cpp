@@ -412,27 +412,19 @@ GLuint LoadTexture(const char* path)
 	return result;
 }
 
-void init(Game::Input &inputData, Game::GameData *&gameData, Game::RenderCommands &renderData, RendererData &rendererData, LARGE_INTEGER &l_LastFrameTime)
+void init(Game::Input &inputData, Game::GameData *&gameData, Game::RenderCommands &renderCommands, RendererData &rendererData, LARGE_INTEGER &l_LastFrameTime)
 {
 	//WGL_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB
 	//Init Time
 	QueryPerformanceCounter(&l_LastFrameTime);
 
 	//Init gameData
-	gameData = Game::CreateGameData();
-	renderData.orthoWidth = screenWidth;
-	renderData.orthoHeight = screenHeight;
+	renderCommands.orthoWidth = screenWidth;
+	renderCommands.orthoHeight = screenHeight;
 
 	//Init textures
 	rendererData.textures[(int)Game::RenderCommands::TextureNames::BALLS] = LoadTexture("ball.png");
 	rendererData.textures[(int)Game::RenderCommands::TextureNames::PLAYER] = LoadTexture("player.png");
-
-	//Init RenderData
-	renderData.sprites.resize(2);
-	renderData.sprites[0].position = glm::vec2(.0f, .0f);
-	renderData.sprites[0].size = glm::vec2(20.0f, 20.0f);
-	renderData.sprites[1].position = glm::vec2(.0f, .0f);
-	renderData.sprites[1].size = glm::vec2(20.0f, 20.0f);
 
 	//Init Render Data
 	GLint vs = 0, ps = 0;
@@ -474,7 +466,7 @@ void init(Game::Input &inputData, Game::GameData *&gameData, Game::RenderCommand
 }
 
 
-void render(RendererData &rendererData, Game::RenderCommands &renderData) {
+void render(RendererData &rendererData, Game::RenderCommands &renderCommands) {
 	glm::mat4 projection = glm::ortho(-400.0f, 400.0f, -300.0f, 300.0f, -5.0f, 5.0f);
 	// preparation:
 	glClearColor(0, 0.1, 0, 1);
@@ -483,7 +475,7 @@ void render(RendererData &rendererData, Game::RenderCommands &renderData) {
 	glUseProgram(rendererData.myShader);
 	glActiveTexture(GL_TEXTURE0 + 0);
 	// render all sprites
-	for (auto sprite : renderData.sprites)
+	for (auto sprite : renderCommands.sprites)
 	{
 		glBindTexture(GL_TEXTURE_2D, rendererData.textures[(int)sprite.texture]); // get the right texture
 
