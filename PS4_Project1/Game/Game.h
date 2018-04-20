@@ -19,6 +19,7 @@ namespace Game {
 	{
 		GameObject Player;
 		std::vector<GameObject> Balls;
+		glm::vec2 ScreenSize = glm::vec2(1280, 720);
 	};
 
 	

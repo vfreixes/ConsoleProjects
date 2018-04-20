@@ -19,6 +19,8 @@
 
 #include "stb\stb_image.h"
 
+static bool windowActive = true;
+static size_t screenWidth = 1280, screenHeight = 720;
 
 
 struct VertexTN
@@ -62,8 +64,7 @@ struct FullFile
 static HGLRC s_OpenGLRenderingContext = nullptr;
 static HDC s_WindowHandleToDeviceContext;
 
-static bool windowActive = true;
-static size_t screenWidth = 1280, screenHeight = 720;
+
 
 inline FullFile ReadFullFile(const wchar_t* path)
 {
@@ -467,7 +468,7 @@ void init(Game::Input &inputData, Game::GameData *&gameData, Game::RenderCommand
 
 
 void render(RendererData &rendererData, Game::RenderCommands &renderCommands) {
-	glm::mat4 projection = glm::ortho(-400.0f, 400.0f, -300.0f, 300.0f, -5.0f, 5.0f);
+	glm::mat4 projection = glm::ortho(-(screenWidth / 2.0f), (screenWidth / 2.0f), -(screenHeight / 2.0f), (screenHeight / 2.0f), -5.0f, 5.0f);
 	// preparation:
 	glClearColor(0, 0.1, 0, 1);
 	glClear(GL_COLOR_BUFFER_BIT);
