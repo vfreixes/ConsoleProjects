@@ -686,34 +686,63 @@ int main(int argc, const char *argv[])
 		gfxc.setTextures(Gnm::kShaderStagePs, 0, 1, &texture);
 		gfxc.setSamplers(Gnm::kShaderStagePs, 0, 1, &sampler);
 
-		// Allocate the vertex shader constants from the command buffer
-		ShaderConstants *constants = static_cast<ShaderConstants*>(
-			gfxc.allocateFromCommandBuffer(sizeof(ShaderConstants), Gnm::kEmbeddedDataAlignment4) );
+		//// Allocate the vertex shader constants from the command buffer
+		//ShaderConstants *constants = static_cast<ShaderConstants*>(
+		//	gfxc.allocateFromCommandBuffer(sizeof(ShaderConstants), Gnm::kEmbeddedDataAlignment4) );
 
-		// Initialize the vertex shader constants
-		if( constants )
+		//// Initialize the vertex shader constants
+		//if( constants )
+		//{
+		//	static float angle = 0.0f;
+		//	angle += 1.0f / 120.0f;
+		//	const float kAspectRatio = float(kDisplayBufferWidth) / float(kDisplayBufferHeight);
+		//	const Matrix4 rotationMatrix = Matrix4::rotationZ(angle);
+		//	const Matrix4 scaleMatrix = Matrix4::scale(Vector3(1, kAspectRatio, 1));
+		//	constants->m_WorldViewProj = (scaleMatrix * rotationMatrix);
+
+		//	Gnm::Buffer constBuffer;
+		//	constBuffer.initAsConstantBuffer(constants, sizeof(ShaderConstants));
+		//	gfxc.setConstantBuffers(Gnm::kShaderStageVs, 0, 1, &constBuffer);
+		//}
+		//else
+		//{
+		//	printf("Cannot allocate vertex shader constants\n");
+		//}
+
+		//// Submit a draw call
+		//gfxc.setPrimitiveType(Gnm::kPrimitiveTypeTriList);
+		//gfxc.setIndexSize(Gnm::kIndexSize16);
+		//gfxc.drawIndex(kIndexCount, indexData);
+
+
+
+		// render sprites in the ps4 modifying the sample
+		for (Game::RenderCommands::Sprite &sprite : renderCommands.sprites)
 		{
-			static float angle = 0.0f;
-			angle += 1.0f / 120.0f;
-			const float kAspectRatio = float(kDisplayBufferWidth) / float(kDisplayBufferHeight);
-			const Matrix4 rotationMatrix = Matrix4::rotationZ(angle);
-			const Matrix4 scaleMatrix = Matrix4::scale(Vector3(1, kAspectRatio, 1));
-			constants->m_WorldViewProj = (scaleMatrix * rotationMatrix);
+			ShaderConstants *constants = static_cast<ShaderConstants*>(
+				gfxc.allocateFromCommandBuffer(sizeof(ShaderConstants), Gnm::kEmbeddedDataAlignment4));
+			if (constants)
+			{
+				const float kAspectRatio = float(kDisplayBufferWidth) / float(kDisplayBufferHeight);
+				const Matrix4 scaleMatrix = Matrix4::scale(Vector3(sprite.size.x, sprite.size.y, 1));
+				const Matrix4 rotationMatrix = Matrix4::rotationZ(sprite.rotation);
+				const Matrix4 translateMatrix = Matrix4::translation(Vector3(sprite.position.x, sprite.position.y, 0));
+				const Matrix4 orthoMatrix = Matrix4::orthographic(-100 * kAspectRatio, 100 * kAspectRatio, -100, 100, 0, 1);
+				constants->m_WorldViewProj = (orthoMatrix * translateMatrix * rotationMatrix * scaleMatrix);
 
-			Gnm::Buffer constBuffer;
-			constBuffer.initAsConstantBuffer(constants, sizeof(ShaderConstants));
-			gfxc.setConstantBuffers(Gnm::kShaderStageVs, 0, 1, &constBuffer);
+				Gnm::Buffer constBuffer;
+				constBuffer.initAsConstantBuffer(constants, sizeof(ShaderConstants));
+				gfxc.setConstantBuffers(Gnm::kShaderStageVs, 0, 1, &constBuffer);
+
+				// Submit a draw call
+				gfxc.drawIndex(kIndexCount, indexData);
+			}
+			else
+			{
+				printf("Cannot allocate vertex shader constants\n");
+			}
+
 		}
-		else
-		{
-			printf("Cannot allocate vertex shader constants\n");
-		}
-
-		// Submit a draw call
-		gfxc.setPrimitiveType(Gnm::kPrimitiveTypeTriList);
-		gfxc.setIndexSize(Gnm::kIndexSize16);
-		gfxc.drawIndex(kIndexCount, indexData);
-
 
 		// Submit the command buffers, request a flip of the display buffer and
 		// write the GPU label that determines the render context state (free)

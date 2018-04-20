@@ -46,10 +46,10 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ORBIS'">
-    <IncludePath>$(SolutionDir)..\api_gnm;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)..\api_gnm;$(IncludePath);$(SolutionDir)\deps\Include;</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ORBIS'">
-    <IncludePath>$(SolutionDir)..\api_gnm;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)..\api_gnm;$(IncludePath);$(SolutionDir)\deps\Include;</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ORBIS'">
     <ClCompile>
