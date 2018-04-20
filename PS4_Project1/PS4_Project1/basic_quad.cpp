@@ -687,15 +687,9 @@ int main(int argc, const char *argv[])
 	for(uint32_t frameIndex = 0; frameIndex < 1000; ++frameIndex)
 	{
 		Game::Input input = {};
-		Game::RenderCommands renderCommands = Game::Update(input, *gameData);
-		Gnmx::GnmxGfxContext &gfxc = renderContext->gfxContext;
 
-
-
-		bool action = false;
-
+		///Get button Circle
 		ScePadData currentScePad;
-
 		int ret = scePadReadState(player1GamepadHandle, &currentScePad);
 		if (ret == SCE_OK) {
 			// Data was successfully obtained
@@ -703,7 +697,7 @@ int main(int argc, const char *argv[])
 			// compare gamepad state with prev loop iteration state
 			if ((currentScePad.buttons & SCE_PAD_BUTTON_CIRCLE) != 0 && (prevScePad.buttons & SCE_PAD_BUTTON_CIRCLE) == 0)
 			{
-				action = true;
+				input.buttonPressed = true;
 			}
 
 			// save prev state
@@ -711,35 +705,38 @@ int main(int argc, const char *argv[])
 		}
 
 		// get the gamepad info (4 deadzones)
-
 		ScePadControllerInformation controllerInfo;
-
 		ret = scePadGetControllerInformation(player1GamepadHandle, &controllerInfo);
 		if (ret < 0) return ret;
 
-
-
-		// get the stick position (with deadzone)
-
+		// get the left stick position (with deadzone)
 		int deadZoneMin = 0x80 - controllerInfo.stickInfo.deadZoneLeft;
 		int deadZoneMax = 0x80 + controllerInfo.stickInfo.deadZoneLeft;
 
 		glm::vec2 leftStick;
-		if (currentScePad.leftStick.x < deadZoneMin)
-			leftStick.x = (float)(currentScePad.leftStick.x / (float)deadZoneMin) - 1.0f;
-		else if (currentScePad.leftStick.x > deadZoneMax)
-			leftStick.x = (float)((currentScePad.leftStick.x - deadZoneMax) / (float)(255 - deadZoneMax));
-		else
-			leftStick.x = 0;
+		if (currentScePad.leftStick.x < deadZoneMin) {
+			input.direction.x = (float)(currentScePad.leftStick.x / (float)deadZoneMin) - 1.0f;
+		}
+		else if (currentScePad.leftStick.x > deadZoneMax) {
+			input.direction.x = (float)((currentScePad.leftStick.x - deadZoneMax) / (float)(255 - deadZoneMax));
+		}
+		else {
+			input.direction.x = 0;
+		}
 
-		if (currentScePad.leftStick.y < deadZoneMin)
-			leftStick.y = (float)(currentScePad.leftStick.y / (float)deadZoneMin) - 1.0f;
-		else if (currentScePad.leftStick.y > deadZoneMax)
-			leftStick.y = (float)((currentScePad.leftStick.y - deadZoneMax) / (float)(255 - deadZoneMax));
-		else
-			leftStick.y = 0;
+		if (currentScePad.leftStick.y < deadZoneMin) {
+			input.direction.y = (float)(currentScePad.leftStick.y / (float)deadZoneMin) - 1.0f;
+		}
+		else if (currentScePad.leftStick.y > deadZoneMax) {
+			input.direction.y = (float)((currentScePad.leftStick.y - deadZoneMax) / (float)(255 - deadZoneMax));
+		}
+		else {
+			input.direction.x = 0;
+		}
 
 		
+		Game::RenderCommands renderCommands = Game::Update(input, *gameData);
+		Gnmx::GnmxGfxContext &gfxc = renderContext->gfxContext;
 
 		// Wait until the context label has been written to make sure that the
 		// GPU finished parsing the command buffers before overwriting them

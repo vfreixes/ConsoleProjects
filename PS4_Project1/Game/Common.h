@@ -13,6 +13,7 @@ namespace Game {
 		uint32_t screenWidth, screenHeight;
 		bool buttonPressed;
 		float dir;
+		glm::vec2 direction;
 	};
 
 	struct RenderCommands {
