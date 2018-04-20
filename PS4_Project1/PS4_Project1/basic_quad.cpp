@@ -589,7 +589,6 @@ int main(int argc, const char *argv[])
 	
 	int32_t player1GamepadHandle; // this will be the id by wich we refer to the gamepad
 
-		
 	int ret; // variable to hold the return from ps4 functions
 	SceUserServiceUserId userId; // id of the user
 
@@ -617,79 +616,21 @@ int main(int argc, const char *argv[])
 		/* Setting failed */
 	}
 
-	
-
-	// before main loop
-	
 	ScePadData prevScePad;
-			// get gamepad state
+	// get gamepad state
 	int ret = scePadReadState(player1GamepadHandle, &prevScePad);
 	if (ret == SCE_OK) {
 		// Data was successfully obtained
 	}
-	
-	
 
-	
-	bool action = false;
-
+	Game::Input input = {};
 	ScePadData currentScePad;
-	
-	int ret = scePadReadState(player1GamepadHandle, &currentScePad);
-	if (ret == SCE_OK) {
-		// Data was successfully obtained
-
-		// compare gamepad state with prev loop iteration state
-		if ((currentScePad.buttons & SCE_PAD_BUTTON_CIRCLE) != 0 && (prevScePad.buttons & SCE_PAD_BUTTON_CIRCLE) == 0)
-		{
-			action = true;
-		}
-
-		// save prev state
-		prevScePad = currentScePad;
-	}
-	
-	
-
-
-	// get the gamepad info (4 deadzones)
-	
-	ScePadControllerInformation controllerInfo;
-
-	ret = scePadGetControllerInformation(player1GamepadHandle, &controllerInfo);
-	if (ret < 0) return ret;
-	
-
-
-	// get the stick position (with deadzone)
-	
-	int deadZoneMin = 0x80 - controllerInfo.stickInfo.deadZoneLeft;
-	int deadZoneMax = 0x80 + controllerInfo.stickInfo.deadZoneLeft;
-
-	glm::vec2 leftStick;
-	if (currentScePad.leftStick.x < deadZoneMin)
-		leftStick.x = (float)(currentScePad.leftStick.x / (float)deadZoneMin) - 1.0f;
-	else if (currentScePad.leftStick.x > deadZoneMax)
-		leftStick.x = (float)((currentScePad.leftStick.x - deadZoneMax) / (float)(255 - deadZoneMax));
-	else
-		leftStick.x = 0;
-
-	if (currentScePad.leftStick.y < deadZoneMin)
-		leftStick.y = (float)(currentScePad.leftStick.y / (float)deadZoneMin) - 1.0f;
-	else if (currentScePad.leftStick.y > deadZoneMax)
-		leftStick.y = (float)((currentScePad.leftStick.y - deadZoneMax) / (float)(255 - deadZoneMax));
-	else
-		leftStick.y = 0;
-	
-
-
 	//////// GameUpdate
 	for(uint32_t frameIndex = 0; frameIndex < 1000; ++frameIndex)
 	{
-		Game::Input input = {};
 
 		///Get button Circle
-		ScePadData currentScePad;
+		
 		int ret = scePadReadState(player1GamepadHandle, &currentScePad);
 		if (ret == SCE_OK) {
 			// Data was successfully obtained
