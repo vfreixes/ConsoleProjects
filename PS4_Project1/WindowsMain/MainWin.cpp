@@ -20,7 +20,7 @@
 #include "stb\stb_image.h"
 
 static bool windowActive = true;
-static size_t screenWidth = 1280, screenHeight = 720;
+static size_t screenWidth = 1920, screenHeight = 1080;
 
 
 struct VertexTN
@@ -422,6 +422,7 @@ void init(Game::Input &inputData, Game::GameData *&gameData, Game::RenderCommand
 	//Init gameData
 	renderCommands.orthoWidth = screenWidth;
 	renderCommands.orthoHeight = screenHeight;
+	inputData.windowHalfSize = { screenWidth / 2.0, screenHeight / 2.0 };
 
 	//Init textures
 	rendererData.textures[(int)Game::RenderCommands::TextureNames::BALLS] = LoadTexture("ball.png");

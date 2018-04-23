@@ -9,20 +9,12 @@ namespace Game {
 
 	struct GameObject
 	{
-		glm::vec2 position, velocity;
+		glm::vec2 pos, vel;
 		float radi;
 
-		glm::vec2 GetExtreme(glm::vec2 dir) const { return position + dir * radi; }
+		glm::vec2 GetExtreme(glm::vec2 dir) const { return pos + dir * radi; }
 	};
 
-	struct GameData
-	{
-		GameObject Player;
-		std::vector<GameObject> Balls;
-		glm::vec2 ScreenSize = glm::vec2(1280, 720);
-	};
-
-	
 
 	struct PossibleCollission
 	{
@@ -42,6 +34,18 @@ namespace Game {
 		glm::dvec2 normal;
 		double distance;
 	};
+
+	struct GameData
+	{
+		GameObject player;
+		std::vector<GameObject> balls;
+		std::vector<GameObject> prevBalls;
+		std::vector<PossibleCollission> coll;
+	};
+
+	
+
+	
 
 }
 

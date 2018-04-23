@@ -624,6 +624,8 @@ int main(int argc, const char *argv[])
 	}
 
 	Game::Input input = {};
+	input.screenWidth = 1920;
+	input.screenHeight = 1080;
 	ScePadData currentScePad;
 	//////// GameUpdate
 	for(uint32_t frameIndex = 0; frameIndex < 1000; ++frameIndex)

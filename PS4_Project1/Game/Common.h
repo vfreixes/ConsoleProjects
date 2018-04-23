@@ -9,11 +9,11 @@ namespace Game {
 
 	struct Input
 	{
-		double dt;
-		uint32_t screenWidth, screenHeight;
+		float dt;
 		bool buttonPressed;
 		float dir;
 		glm::vec2 direction;
+		glm::vec2 windowHalfSize;
 	};
 
 	struct RenderCommands {
