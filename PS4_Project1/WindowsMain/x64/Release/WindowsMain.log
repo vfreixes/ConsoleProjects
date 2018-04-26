@@ -1,0 +1,8 @@
+﻿  glew.c
+  MainWin.cpp
+MainWin.cpp(261): error C3861: 'ToggleFullscreen': identifier not found
+MainWin.cpp(423): warning C4267: '=': conversion from 'size_t' to 'uint32_t', possible loss of data
+MainWin.cpp(424): warning C4267: '=': conversion from 'size_t' to 'uint32_t', possible loss of data
+MainWin.cpp(474): warning C4305: 'argument': truncation from 'double' to 'GLclampf'
+MainWin.cpp(552): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+MainWin.cpp(627): warning C4244: '=': conversion from 'double' to 'float', possible loss of data

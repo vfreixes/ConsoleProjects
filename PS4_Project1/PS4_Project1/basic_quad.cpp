@@ -669,10 +669,10 @@ int main(int argc, const char *argv[])
 		}
 
 		if (currentScePad.leftStick.y < deadZoneMin) {
-			input.direction.y = ((float)(currentScePad.leftStick.y / (float)deadZoneMin) - 1.0f) * 100;
+			input.direction.y = -((float)(currentScePad.leftStick.y / (float)deadZoneMin) - 1.0f) * 100;
 		}
 		else if (currentScePad.leftStick.y > deadZoneMax) {
-			input.direction.y = ((float)((currentScePad.leftStick.y - deadZoneMax) / (float)(255 - deadZoneMax))) * 100;
+			input.direction.y = -((float)((currentScePad.leftStick.y - deadZoneMax) / (float)(255 - deadZoneMax))) * 100;
 		}
 		else {
 			input.direction.y = 0;

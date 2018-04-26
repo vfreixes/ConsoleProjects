@@ -1,0 +1,3 @@
+﻿  Game.cpp
+c:\users\alumno\documents\consoleprojects\ps4_project1\game\game.cpp(92): warning C4700: uninitialized local variable 'tmp' used
+  Game.vcxproj -> C:\Users\Alumno\Documents\ConsoleProjects\PS4_Project1\x64\Release\Game.lib

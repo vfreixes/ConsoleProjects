@@ -1,0 +1,4 @@
+﻿  basic_quad.cpp
+C:\Users\Alumno\Documents\ConsoleProjects\PS4_Project1\PS4_Project1\basic_quad.cpp(823,19): warning : unused variable 'orthoMatrix' [-Wunused-variable]
+C:\Users\Alumno\Documents\ConsoleProjects\PS4_Project1\PS4_Project1\basic_quad.cpp(660,13): warning : unused variable 'leftStick' [-Wunused-variable]
+  PS4_Project1.vcxproj -> C:\Users\Alumno\Documents\ConsoleProjects\PS4_Project1\ORBIS_Debug\PS4_Project1.elf
