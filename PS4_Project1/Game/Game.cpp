@@ -14,13 +14,21 @@ GameData *Game::CreateGameData() {
 	GameData* gameData = new GameData;
 	
 	GameObject ball;
+
+	ball.pos = glm::vec2(-200, .0f);
+	ball.vel = glm::vec2(40.0f, .0f);
+	gameData->balls.push_back(ball);
+
+	ball.pos = glm::vec2(200, .0f);
+	ball.vel = glm::vec2(-40.0f, .0f);
+	gameData->balls.push_back(ball);
 	
-	for (int i = 0; i < 11; i++)
+	/*for (int i = 0; i < 11; i++)
 	{
 		ball.pos = glm::vec2(30*i, 100);
 		ball.vel = glm::vec2(10*i, 0);
 		gameData->balls.push_back(ball);
-	}
+	}*/
 	
 	return gameData;
 }
@@ -134,7 +142,6 @@ std::vector<PossibleCollission> SortAndSweep(const std::vector<const GameObject*
 	return result;
 }
 
-/*
 std::vector<ContactGroup> GenerateContactGroups(std::vector<ContactData> contactData)
 {
 	// si ordenem podem "simplificar" la segona part.
@@ -233,11 +240,19 @@ std::vector<ContactGroup> GenerateContactGroups(std::vector<ContactData> contact
 	return result;
 }
 
-void SolveVelocity(const ContactData contactData) {
+void SolveVelocity(const ContactData *contactData) {
 
 }
 
-void SolvePenetatrion(const ContactData contactData) {
+void SolvePenetatrion(const ContactData *contactData) {
+
+}
+
+bool HasCollision(GameObject* ball01, GameObject* ball02) {
+
+}
+
+ContactData GenerateContactData(GameObject* ball01, GameObject* ball02) {
 
 }
 
@@ -293,5 +308,3 @@ void SolveCollissionGroup(const ContactGroup& contactGroup)
 		++iterations;
 	}
 }
-
-*/
