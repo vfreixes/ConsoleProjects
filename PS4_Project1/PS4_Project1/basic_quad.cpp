@@ -589,7 +589,7 @@ int main(int argc, const char *argv[])
 	
 	int32_t player1GamepadHandle; // this will be the id by wich we refer to the gamepad
 
-	int ret; // variable to hold the return from ps4 functions
+ 
 	SceUserServiceUserId userId; // id of the user
 
 	ret = scePadInit(); // initialize 
@@ -618,17 +618,17 @@ int main(int argc, const char *argv[])
 
 	ScePadData prevScePad;
 	// get gamepad state
-	int ret = scePadReadState(player1GamepadHandle, &prevScePad);
+	 ret = scePadReadState(player1GamepadHandle, &prevScePad);
 	if (ret == SCE_OK) {
 		// Data was successfully obtained
 	}
 
 	Game::Input input = {};
-	input.screenWidth = 1920;
-	input.screenHeight = 1080;
+	input.dt = 0.016;
+	input.windowHalfSize = { 940, 540 };
 	ScePadData currentScePad;
 	//////// GameUpdate
-	for(uint32_t frameIndex = 0; frameIndex < 1000; ++frameIndex)
+	for(uint32_t frameIndex = 0; frameIndex < 1000; )
 	{
 
 		///Get button Circle
@@ -641,6 +641,7 @@ int main(int argc, const char *argv[])
 			if ((currentScePad.buttons & SCE_PAD_BUTTON_CIRCLE) != 0 && (prevScePad.buttons & SCE_PAD_BUTTON_CIRCLE) == 0)
 			{
 				input.buttonPressed = true;
+				input.direction = { 100, 100 };
 			}
 
 			// save prev state
@@ -658,23 +659,23 @@ int main(int argc, const char *argv[])
 
 		glm::vec2 leftStick;
 		if (currentScePad.leftStick.x < deadZoneMin) {
-			input.direction.x = (float)(currentScePad.leftStick.x / (float)deadZoneMin) - 1.0f;
+			input.direction.x = ((float)(currentScePad.leftStick.x / (float)deadZoneMin) - 1.0f) * 100;
 		}
 		else if (currentScePad.leftStick.x > deadZoneMax) {
-			input.direction.x = (float)((currentScePad.leftStick.x - deadZoneMax) / (float)(255 - deadZoneMax));
+			input.direction.x = ((float)((currentScePad.leftStick.x - deadZoneMax) / (float)(255 - deadZoneMax))) * 100;
 		}
 		else {
 			input.direction.x = 0;
 		}
 
 		if (currentScePad.leftStick.y < deadZoneMin) {
-			input.direction.y = (float)(currentScePad.leftStick.y / (float)deadZoneMin) - 1.0f;
+			input.direction.y = ((float)(currentScePad.leftStick.y / (float)deadZoneMin) - 1.0f) * 100;
 		}
 		else if (currentScePad.leftStick.y > deadZoneMax) {
-			input.direction.y = (float)((currentScePad.leftStick.y - deadZoneMax) / (float)(255 - deadZoneMax));
+			input.direction.y = ((float)((currentScePad.leftStick.y - deadZoneMax) / (float)(255 - deadZoneMax))) * 100;
 		}
 		else {
-			input.direction.x = 0;
+			input.direction.y = 0;
 		}
 
 		
@@ -820,7 +821,8 @@ int main(int argc, const char *argv[])
 				const Matrix4 rotationMatrix = Matrix4::rotationZ(sprite.rotation);
 				const Matrix4 translateMatrix = Matrix4::translation(Vector3(sprite.position.x, sprite.position.y, 0));
 				const Matrix4 orthoMatrix = Matrix4::orthographic(-100 * kAspectRatio, 100 * kAspectRatio, -100, 100, 0, 1);
-				constants->m_WorldViewProj = (orthoMatrix * translateMatrix * rotationMatrix * scaleMatrix);
+				const Matrix4 projection = Matrix4::orthographic(-(float)input.windowHalfSize.x, (float)input.windowHalfSize.x, -(float)input.windowHalfSize.y, (float)input.windowHalfSize.y, -5.0f, 5.0f);
+				constants->m_WorldViewProj = (projection * translateMatrix * rotationMatrix * scaleMatrix);
 
 				Gnm::Buffer constBuffer;
 				constBuffer.initAsConstantBuffer(constants, sizeof(ShaderConstants));

@@ -29,6 +29,12 @@ namespace Game {
 		double restitution, friction;
 	};
 
+	struct ContactGroup
+	{
+		std::vector<GameObject*> objects;
+		std::vector<ContactData> contacts;
+	};
+
 	struct Line
 	{
 		glm::dvec2 normal;

@@ -21,7 +21,7 @@
 
 static bool windowActive = true;
 static size_t screenWidth = 1920, screenHeight = 1080;
-
+bool keyboard[256] = {};
 
 struct VertexTN
 {
@@ -503,6 +503,40 @@ void render(RendererData &rendererData, Game::RenderCommands &renderCommands) {
 	SwapBuffers(s_WindowHandleToDeviceContext);
 }
 
+
+void manageInput(bool &quit) {
+	MSG msg = {};
+	while (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
+	{
+		bool processed = false;
+		if (msg.message == WM_QUIT)
+		{
+			quit = true;
+			processed = true;
+		}
+		else if (msg.message == WM_KEYDOWN)
+		{
+			keyboard[msg.wParam & 255] = true;
+			processed = true;
+			if (msg.wParam == VK_ESCAPE)
+			{
+				PostQuitMessage(0);
+			}
+		}
+		else if (msg.message == WM_KEYUP)
+		{
+			keyboard[msg.wParam & 255] = false;
+			processed = true;
+		}
+
+		if (!processed)
+		{
+			TranslateMessage(&msg);
+			DispatchMessage(&msg);
+		}
+	}
+}
+
 int __stdcall WinMain(__in HINSTANCE hInstance, __in_opt HINSTANCE hPrevInstance, __in_opt LPSTR lpCmdLine, __in int nShowCmd) {
 	
 	// load window stuff
@@ -533,21 +567,29 @@ int __stdcall WinMain(__in HINSTANCE hInstance, __in_opt HINSTANCE hPrevInstance
 
 	init(input, gameData, renderCommands, rendererData, l_LastFrameTime);
 	bool quit = false;
-	bool keyboard[256] = {};
+	
 	do
 	{
-		MSG msg = {};
-		while (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
+		manageInput(quit);
+
+		if (keyboard['W'])
 		{
-			if (msg.message == WM_QUIT)
-			{
-				quit = true;
-			}
-			else
-			{
-				TranslateMessage(&msg);
-				DispatchMessage(&msg);
-			}
+			input.direction.y = +100;
+		}
+		if (keyboard['S'])
+		{
+			input.direction.y = -100;
+		}
+		if (keyboard['A'])
+		{
+			input.direction.x = -100;
+		}
+		if (keyboard['D'])
+		{
+			input.direction.x = +100;
+		}
+		if (keyboard[VK_RETURN]) {
+			input.direction = { 100, 100 };
 		}
 
 		renderCommands = Game::Update(input, *gameData);
