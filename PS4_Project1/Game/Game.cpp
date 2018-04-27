@@ -13,76 +13,38 @@ GameData *Game::CreateGameData() {
 
 	GameData* gameData = new GameData;
 	
-	GameObject ball;
+	GameObject* ball = new GameObject;
 
-	ball.pos = glm::vec2(-200, .0f);
-	ball.vel = glm::vec2(40.0f, .0f);
+	ball->pos = glm::vec2(-200.0f, .0f);
+	ball->vel = glm::vec2(-40.0f, .0f);
+	ball->mass = 15.0f;
 	gameData->balls.push_back(ball);
 
-	ball.pos = glm::vec2(200, .0f);
-	ball.vel = glm::vec2(-40.0f, .0f);
+	ball = new GameObject;
+
+	ball->pos = glm::vec2(200, .0f);
+	ball->vel = glm::vec2(40.0f, .0f);
+	ball->mass = 15.0f;
 	gameData->balls.push_back(ball);
+	delete ball;
 	
 	/*for (int i = 0; i < 11; i++)
 	{
-		ball.pos = glm::vec2(30*i, 100);
-		ball.vel = glm::vec2(10*i, 0);
+		ball->pos = glm::vec2(30*i, 100);
+		ball->vel = glm::vec2(10*i, 0);
 		gameData->balls.push_back(ball);
 	}*/
 	
 	return gameData;
 }
 
-RenderCommands Game::Update(Input const &input, GameData &gameData) {
 
-
-	gameData.prevBalls = std::move(gameData.balls);
-	gameData.balls.clear();
-
-	RenderCommands result = {};
-	RenderCommands::Sprite sprite = {};
-	
-	//update balls
-	int i = 0;
-	for (const auto& ball : gameData.prevBalls)
-	{
-		glm::vec2 f = {0 , 0};
-		if (i == 0) {
-			f.x = input.direction.x;
-			f.y = input.direction.y;
-		}
-		GameObject ballNext = {};
-		ballNext.pos = ball.pos + ball.vel * input.dt + f * (0.5f * input.dt * input.dt);
-		ballNext.vel = ball.vel + f * input.dt;
-
-		if (ballNext.pos.x > input.windowHalfSize.x || ballNext.pos.x < -input.windowHalfSize.x)
-			ballNext.vel.x = -ballNext.vel.x;
-		if (ballNext.pos.y > input.windowHalfSize.y || ballNext.pos.y < -input.windowHalfSize.y)
-			ballNext.vel.y = -ballNext.vel.y;
-
-		gameData.balls.push_back(ballNext);
-
-		i++;
-	}
-	
-	//sprites
-	for (int i = 0; i < gameData.balls.size(); i++)
-	{
-		sprite.position = gameData.balls[i].pos;
-		sprite.size = glm::vec2(20, 20);
-		if( i == 0) sprite.texture = RenderCommands::TextureNames::PLAYER;
-		else sprite.texture = RenderCommands::TextureNames::BALLS;
-		result.sprites.push_back(sprite);
-	}
-
-	return result;
-}
 
 void Game::DestroyGameData(GameData* gameData) {
 	delete gameData;
 }
 
-std::vector<PossibleCollission> SortAndSweep(const std::vector<const GameObject*>& gameObjects)
+std::vector<PossibleCollission> SortAndSweep(const std::vector<GameObject*>& gameObjects)
 {
 	struct Extreme
 	{
@@ -93,18 +55,19 @@ std::vector<PossibleCollission> SortAndSweep(const std::vector<const GameObject*
 
 	std::vector<Extreme> list;
 
-	for (const GameObject* go : gameObjects)
+	for (int i = 0; i < gameObjects.size(); i++)
 	{
 
 		Extreme tmp;
-		tmp.go->pos = go->pos;
-		tmp.go->radi = go->radi;
-		tmp.go->radi = go->radi;
-		tmp.p = dot(go->GetExtreme({ -1,0 }), { 1, 0 });
+		tmp.go = new GameObject;
+		tmp.go->pos = gameObjects[i]->pos;
+		tmp.go->radi = gameObjects[i]->radi;
+		tmp.go->radi = gameObjects[i]->radi;
+		tmp.p = dot(gameObjects[i]->GetExtreme({ -1,0 }), { 1, 0 });
 		tmp.min = true;
 		list.push_back(tmp);
 
-		tmp.p = dot(go->GetExtreme({ +1,0 }), { 1, 0 });
+		tmp.p = dot(gameObjects[i]->GetExtreme({ +1,0 }), { 1, 0 });
 		tmp.min = false;
 		list.push_back(tmp);
 
@@ -239,22 +202,62 @@ std::vector<ContactGroup> GenerateContactGroups(std::vector<ContactData> contact
 
 	return result;
 }
-
-void SolveVelocity(const ContactData *contactData) {
-
+void SolvePenetatrion(ContactData *contactData) {
+	contactData->penetration = (contactData->a->radi + contactData->b->radi) - glm::length(contactData->b->radi - contactData->a->radi);
 }
 
-void SolvePenetatrion(const ContactData *contactData) {
+void SolveVelocity(ContactData *contactData) {
+	// velocitat d'acostament = a.vel · |b.pos - a.pos|   +   b.vel · |a.pos - b.pos|
+	// velocitat d'acostament = -(a.vel - b.vel) · |a.pos - b.pos|
+	// velocitat de separació (vs) = (a.vel - b.vel) · |a.pos - b.pos|   =   (a.vel - b.vel) ·  collision.normal
 
-}
+	// conservació del moment (
+	// a.mass * a.velocitat + b.mass * b.velocitat == a.mass * a'.velocitat + b.mass * b'.velocitat 
+	// vs' = -c * vs
+	// c -> coeficient de restitució (0 - 1)
 
-bool HasCollision(GameObject* ball01, GameObject* ball02) {
+
+	// impuls = massa * velocitat (Newton * segon)
+	// v' = v + invmass * sum(impulsos[i])
+
+	glm::vec2 vs = (contactData->a->vel - contactData->b->vel) * (float)glm::abs(glm::length(contactData->normal));
+
+	vs = -((float)contactData->restitution) * vs;
+
+	glm::vec2 impuls1 = (float)contactData->a->mass * contactData->a->vel;
+	glm::vec2 impuls2 = (float)contactData->b->mass * contactData->b->vel;
+	glm::vec2 impulsSum = impuls1 + impuls2;
+
+	contactData->a->vel = contactData->a->vel + contactData->a->mass * impulsSum;
+	contactData->b->vel = contactData->b->vel + contactData->b->mass * impulsSum;
 
 }
 
 ContactData GenerateContactData(GameObject* ball01, GameObject* ball02) {
+	
+	ContactData contactData;
+	contactData.point = (ball01->pos + ball02->pos) / 2.0f;
+	contactData.normal = ball02->pos - ball02->pos;
+	contactData.penetration = (ball01->radi + ball02->radi) - glm::length(contactData.normal);
 
+	contactData.restitution = 0.9f;
+	contactData.friction = 0.1f;
+
+	return contactData;
 }
+
+
+
+
+
+bool HasCollision(GameObject* ball01, GameObject* ball02) {
+	if ( (ball01->radi + ball02->radi) < glm::length(ball02->pos - ball02->pos) ) {
+		return true;
+	}
+	else return false;
+}
+
+
 
 void SolveCollissionGroup(const ContactGroup& contactGroup)
 {
@@ -266,13 +269,13 @@ void SolveCollissionGroup(const ContactGroup& contactGroup)
 		ContactData* contactData = nullptr;
 		for (ContactData& candidate : contacts)
 		{
-			if (contactData == nullptr || contactData->penetatrion < candidate.penetatrion)
+			if (contactData == nullptr || contactData->penetration < candidate.penetration)
 			{
 				contactData = &candidate;
 			}
 		}
 
-		if (contactData->penetatrion < 1e-5)
+		if (contactData->penetration < 1e-5)
 		{
 			break;
 		}
@@ -280,17 +283,17 @@ void SolveCollissionGroup(const ContactGroup& contactGroup)
 		SolveVelocity(contactData);
 		SolvePenetatrion(contactData);
 
-#if ???
-		std::vector<PossibleCollission> possibleCollissions;
-		for (ContactData& cd : contactGroup.contacts)
-		{
-			possibleCollissions.push_back({ cd.a, cd.b });
-		}
-
-		contacts = FindCollissions(possibleCollissions);
-#elif ???
-		contacts = FindCollissions(contactGroup.contacts);
-#else
+//#if ???
+//		std::vector<PossibleCollission> possibleCollissions;
+//		for (ContactData& cd : contactGroup.contacts)
+//		{
+//			possibleCollissions.push_back({ cd.a, cd.b });
+//		}
+//
+//		contacts = FindCollissions(possibleCollissions);
+//#elif ???
+//		contacts = FindCollissions(contactGroup.contacts);
+//#else
 		// tornem a generar contactes per al grup
 		contacts.clear();
 		for (int i = 0; i < contactGroup.objects.size(); ++i)
@@ -304,7 +307,76 @@ void SolveCollissionGroup(const ContactGroup& contactGroup)
 				}
 			}
 		}
-#endif
+//#endif
 		++iterations;
 	}
+}
+
+
+
+RenderCommands Game::Update(Input const &input, GameData &gameData) {
+
+
+	gameData.prevBalls = std::move(gameData.balls);
+	gameData.balls.clear();
+
+	RenderCommands result = {};
+	RenderCommands::Sprite sprite = {};
+
+	//update balls
+	int i = 0;
+	for (const auto& ball : gameData.prevBalls)
+	{
+		glm::vec2 f = { 0 , 0 };
+		if (i == 0) {
+			f.x = input.direction.x;
+			f.y = input.direction.y;
+		}
+		GameObject* ballNext = new GameObject;
+		ballNext->pos = ball->pos + ball->vel * input.dt + f * (0.5f * input.dt * input.dt);
+		ballNext->vel = ball->vel + f * input.dt;
+
+		if (ballNext->pos.x > input.windowHalfSize.x || ballNext->pos.x < -input.windowHalfSize.x)
+			ballNext->vel.x *= -1.0f;
+		if (ballNext->pos.y > input.windowHalfSize.y || ballNext->pos.y < -input.windowHalfSize.y)
+			ballNext->vel.y *= -1.0f;
+
+		gameData.balls.push_back(ballNext);
+
+		i++;
+	}
+
+
+	//Colisions
+
+	
+	std::vector<PossibleCollission> possibleCollisions = SortAndSweep(gameData.balls);
+	
+	std::vector<ContactData> contactData;
+	contactData.reserve(possibleCollisions.size());
+
+	for (int i = 0; i < possibleCollisions.size(); i++){
+		contactData[i] = GenerateContactData(possibleCollisions[i].a, possibleCollisions[i].b);
+	}
+
+	std::vector<ContactGroup> contactGroups = GenerateContactGroups(contactData);
+
+	for (int i = 0; i < contactGroups.size(); i++)
+	{
+		SolveCollissionGroup(contactGroups[i]);
+	}
+	
+	
+
+	//sprites
+	for (int i = 0; i < gameData.balls.size(); i++)
+	{
+		sprite.position = gameData.balls[i]->pos;
+		sprite.size = glm::vec2(20, 20);
+		if (i == 0) sprite.texture = RenderCommands::TextureNames::PLAYER;
+		else sprite.texture = RenderCommands::TextureNames::BALLS;
+		result.sprites.push_back(sprite);
+	}
+
+	return result;
 }
