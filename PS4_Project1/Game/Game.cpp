@@ -134,28 +134,27 @@ std::vector<PossibleCollission> SortAndSweep(const std::vector<const GameObject*
 	return result;
 }
 
-/*
+
 std::vector<ContactGroup> GenerateContactGroups(std::vector<ContactData> contactData)
 {
 	// si ordenem podem "simplificar" la segona part.
 	// sense probar-ho no podem saber si és més optim o no.
 
-	//std::sort(contactData, [](const ContactData& a, const ContactData& b) // aquesta lambda serveix per ordenar i és equivalent a "a < b"
-	//{
-	//	// ens assegurem que el contacte estigui ben generat
-	//	assert(a.a < a.b || a.b == nullptr);
-	//	assert(b.a < b.b || b.b == nullptr); // contactes amb l'element "b" a null son contactes amb objectes de massa infinita (parets, pex)
-	//	
-	//	if(a.a < b.a)
-	//		return true;
-	//	else if(a.a > b.a)
-	//		return false;
-	//	else if(a.b < b.b)
-	//		return true;
-	//	else
-	//		return false;
-	//});
-
+	std::sort(contactData.begin(), contactData.end(), [](const ContactData& a, const ContactData& b) // aquesta lambda serveix per ordenar i és equivalent a "a < b"
+	{
+		// ens assegurem que el contacte estigui ben generat
+		assert(a.a < a.b || a.b == nullptr);
+		assert(b.a < b.b || b.b == nullptr); // contactes amb l'element "b" a null son contactes amb objectes de massa infinita (parets, pex)
+		
+		if(a.a < b.a)
+			return true;
+		else if(a.a > b.a)
+			return false;
+		else if(a.b < b.b)
+			return true;
+		else
+			return false;
+	});
 
 	std::vector<ContactGroup> result;
 	std::unordered_map<GameObject*, ContactGroup*> createdGroups;
@@ -233,13 +232,14 @@ std::vector<ContactGroup> GenerateContactGroups(std::vector<ContactData> contact
 	return result;
 }
 
-void SolveVelocity(const ContactData contactData) {
+void SolveVelocity(const ContactData* contactData) {
 
 }
 
-void SolvePenetatrion(const ContactData contactData) {
+void SolvePenetatrion(const ContactData* contactData) {
 
 }
+
 
 void SolveCollissionGroup(const ContactGroup& contactGroup)
 {
@@ -294,4 +294,26 @@ void SolveCollissionGroup(const ContactGroup& contactGroup)
 	}
 }
 
-*/
+bool HasCollision(GameObject* gc1, GameObject* gc2) {
+
+	if (gc1->pos.x + gc1->radi > gc2->pos.x - gc2->radi && gc1->pos.x + gc1->radi < gc2->pos.x + gc2->radi) {  //Xoca dreta
+		return true;
+	}
+	else if (gc1->pos.x - gc1->radi < gc2->pos.x + gc2->radi && gc1->pos.x - gc1->radi > gc2->pos.x - gc2->radi) { //Xoca esquerra
+		return true;
+	}
+	else if (gc1->pos.y + gc1->radi > gc2->pos.y - gc2->radi && gc1->pos.y + gc1->radi < gc2->pos.y + gc2->radi) { //Xoca adalt
+		return true;
+	}
+	else if (gc1->pos.y - gc1->radi < gc2->pos.y + gc2->radi && gc1->pos.y - gc1->radi > gc2->pos.y - gc2->radi) { // Xoca abaix
+		return true;
+	}
+	else return false;
+}
+
+ContactData GenerateContactData(GameObject* cg1, GameObject* cg2) {  //Aixi generem un ContactData pero nose si la part de friccio i tal s'hauria de posar aqui
+	ContactData tmp;
+	tmp.a = cg1;
+	tmp.b = cg2;
+	return tmp;
+}
