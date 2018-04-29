@@ -19,6 +19,8 @@ GameData *Game::CreateGameData() {
 	{
 		ball.pos = glm::vec2(30*i, 100);
 		ball.vel = glm::vec2(10*i, 0);
+		ball.mass = 1;
+		ball.invMass = 1 / ball.mass;
 		gameData->balls.push_back(ball);
 	}
 	
@@ -27,25 +29,29 @@ GameData *Game::CreateGameData() {
 
 RenderCommands Game::Update(Input const &input, GameData &gameData) {
 
+	const float k0 = 0.85f; // % de velocitat que es manté cada segon
+
+	float brakeValue = pow(k0, input.dt);
 
 	gameData.prevBalls = std::move(gameData.balls);
 	gameData.balls.clear();
 
 	RenderCommands result = {};
 	RenderCommands::Sprite sprite = {};
-	
+
 	//update balls
 	int i = 0;
 	for (const auto& ball : gameData.prevBalls)
 	{
-		glm::vec2 f = {0 , 0};
+		glm::vec2 f = { 0 , 0 };
+		glm::vec2 a = f * ball.invMass;
 		if (i == 0) {
 			f.x = input.direction.x;
 			f.y = input.direction.y;
 		}
 		GameObject ballNext = {};
-		ballNext.pos = ball.pos + ball.vel * input.dt + f * (0.5f * input.dt * input.dt);
-		ballNext.vel = ball.vel + f * input.dt;
+		ballNext.pos = ball.pos + ball.vel * input.dt + a *(0.5f * input.dt * input.dt);
+		ballNext.vel = brakeValue * ball.vel + a * input.dt;
 
 		if (ballNext.pos.x > input.windowHalfSize.x || ballNext.pos.x < -input.windowHalfSize.x)
 			ballNext.vel.x = -ballNext.vel.x;
@@ -56,13 +62,13 @@ RenderCommands Game::Update(Input const &input, GameData &gameData) {
 
 		i++;
 	}
-	
+
 	//sprites
 	for (int i = 0; i < gameData.balls.size(); i++)
 	{
 		sprite.position = gameData.balls[i].pos;
 		sprite.size = glm::vec2(20, 20);
-		if( i == 0) sprite.texture = RenderCommands::TextureNames::PLAYER;
+		if (i == 0) sprite.texture = RenderCommands::TextureNames::PLAYER;
 		else sprite.texture = RenderCommands::TextureNames::BALLS;
 		result.sprites.push_back(sprite);
 	}
@@ -73,7 +79,7 @@ RenderCommands Game::Update(Input const &input, GameData &gameData) {
 void Game::DestroyGameData(GameData* gameData) {
 	delete gameData;
 }
-
+/*
 std::vector<PossibleCollission> SortAndSweep(const std::vector<const GameObject*>& gameObjects)
 {
 	struct Extreme
@@ -232,6 +238,7 @@ std::vector<ContactGroup> GenerateContactGroups(std::vector<ContactData> contact
 	return result;
 }
 
+
 void SolveVelocity(const ContactData* contactData) {
 
 }
@@ -239,7 +246,6 @@ void SolveVelocity(const ContactData* contactData) {
 void SolvePenetatrion(const ContactData* contactData) {
 
 }
-
 
 void SolveCollissionGroup(const ContactGroup& contactGroup)
 {
@@ -317,3 +323,4 @@ ContactData GenerateContactData(GameObject* cg1, GameObject* cg2) {  //Aixi gene
 	tmp.b = cg2;
 	return tmp;
 }
+*/
