@@ -17,16 +17,17 @@ GameData *Game::CreateGameData() {
 
 	ball->pos = glm::vec2(-200.0f, .0f);
 	ball->vel = glm::vec2(-40.0f, .0f);
+	ball->radi = 20.0f;
 	ball->mass = 15.0f;
 	gameData->balls.push_back(ball);
 
-	ball = new GameObject;
+	GameObject* ball2 = new GameObject;
 
-	ball->pos = glm::vec2(200, .0f);
-	ball->vel = glm::vec2(40.0f, .0f);
-	ball->mass = 15.0f;
-	gameData->balls.push_back(ball);
-	delete ball;
+	ball2->pos = glm::vec2(200, .0f);
+	ball2->vel = glm::vec2(40.0f, .0f);
+	ball2->radi = 20.0f;
+	ball2->mass = 15.0f;
+	gameData->balls.push_back(ball2);
 	
 	/*for (int i = 0; i < 11; i++)
 	{
@@ -93,13 +94,14 @@ std::vector<PossibleCollission> SortAndSweep(const std::vector<GameObject*>& gam
 	{
 		if (list[i].min)
 		{
-			for (int j = i + 1; list[i].go != list[j].go; ++j)
-			{
-				if (list[j].min)
+				for (int j = i + 1;j < list.size(); ++j)
 				{
-					result.push_back({ list[i].go, list[j].go });
+					if (list[j].min)
+					{
+						result.push_back({ list[i].go, list[j].go });
+					}
 				}
-			}
+			
 		}
 	}
 	return result;
@@ -110,21 +112,21 @@ std::vector<ContactGroup> GenerateContactGroups(std::vector<ContactData> contact
 	// si ordenem podem "simplificar" la segona part.
 	// sense probar-ho no podem saber si és més optim o no.
 
-	//std::sort(contactData, [](const ContactData& a, const ContactData& b) // aquesta lambda serveix per ordenar i és equivalent a "a < b"
-	//{
-	//	// ens assegurem que el contacte estigui ben generat
-	//	assert(a.a < a.b || a.b == nullptr);
-	//	assert(b.a < b.b || b.b == nullptr); // contactes amb l'element "b" a null son contactes amb objectes de massa infinita (parets, pex)
-	//	
-	//	if(a.a < b.a)
-	//		return true;
-	//	else if(a.a > b.a)
-	//		return false;
-	//	else if(a.b < b.b)
-	//		return true;
-	//	else
-	//		return false;
-	//});
+	std::sort(contactData.begin(), contactData.end(), [](const ContactData& a, const ContactData& b) // aquesta lambda serveix per ordenar i és equivalent a "a < b"
+	{
+		// ens assegurem que el contacte estigui ben generat
+		assert(a.a < a.b || a.b == nullptr);
+		assert(b.a < b.b || b.b == nullptr); // contactes amb l'element "b" a null son contactes amb objectes de massa infinita (parets, pex)
+		
+		if(a.a < b.a)
+			return true;
+		else if(a.a > b.a)
+			return false;
+		else if(a.b < b.b)
+			return true;
+		else
+			return false;
+	});
 
 
 	std::vector<ContactGroup> result;
@@ -236,9 +238,11 @@ void SolveVelocity(ContactData *contactData) {
 ContactData GenerateContactData(GameObject* ball01, GameObject* ball02) {
 	
 	ContactData contactData;
-	contactData.point = (ball01->pos + ball02->pos) / 2.0f;
-	contactData.normal = ball02->pos - ball02->pos;
-	contactData.penetration = (ball01->radi + ball02->radi) - glm::length(contactData.normal);
+	contactData.a = ball01;
+	contactData.b = ball02;
+	contactData.point = (contactData.a->pos + contactData.b->pos) / 2.0f;
+	contactData.normal = contactData.b->pos - contactData.a->pos;
+	contactData.penetration = (contactData.a->radi + contactData.b->radi) - glm::length(contactData.normal);
 
 	contactData.restitution = 0.9f;
 	contactData.friction = 0.1f;
@@ -267,8 +271,9 @@ void SolveCollissionGroup(const ContactGroup& contactGroup)
 	{
 		// busquem la penetració més gran
 		ContactData* contactData = nullptr;
-		for (ContactData& candidate : contacts)
-		{
+		for (int i = 0; i < contacts.size(); ++i){
+			ContactData& candidate = contacts[i];
+			
 			if (contactData == nullptr || contactData->penetration < candidate.penetration)
 			{
 				contactData = &candidate;
@@ -332,9 +337,14 @@ RenderCommands Game::Update(Input const &input, GameData &gameData) {
 			f.x = input.direction.x;
 			f.y = input.direction.y;
 		}
+		else {
+
+		}
 		GameObject* ballNext = new GameObject;
 		ballNext->pos = ball->pos + ball->vel * input.dt + f * (0.5f * input.dt * input.dt);
 		ballNext->vel = ball->vel + f * input.dt;
+		ballNext->radi = ball->radi;
+		ballNext->mass = ball->mass;
 
 		if (ballNext->pos.x > input.windowHalfSize.x || ballNext->pos.x < -input.windowHalfSize.x)
 			ballNext->vel.x *= -1.0f;
@@ -353,10 +363,10 @@ RenderCommands Game::Update(Input const &input, GameData &gameData) {
 	std::vector<PossibleCollission> possibleCollisions = SortAndSweep(gameData.balls);
 	
 	std::vector<ContactData> contactData;
-	contactData.reserve(possibleCollisions.size());
 
-	for (int i = 0; i < possibleCollisions.size(); i++){
-		contactData[i] = GenerateContactData(possibleCollisions[i].a, possibleCollisions[i].b);
+	for (int i = 0; i < possibleCollisions.size(); ++i){
+		ContactData ctData = GenerateContactData(possibleCollisions[i].a, possibleCollisions[i].b);
+		contactData.push_back(ctData);
 	}
 
 	std::vector<ContactGroup> contactGroups = GenerateContactGroups(contactData);
@@ -372,7 +382,7 @@ RenderCommands Game::Update(Input const &input, GameData &gameData) {
 	for (int i = 0; i < gameData.balls.size(); i++)
 	{
 		sprite.position = gameData.balls[i]->pos;
-		sprite.size = glm::vec2(20, 20);
+		sprite.size = glm::vec2(gameData.balls[i]->radi, gameData.balls[i]->radi);
 		if (i == 0) sprite.texture = RenderCommands::TextureNames::PLAYER;
 		else sprite.texture = RenderCommands::TextureNames::BALLS;
 		result.sprites.push_back(sprite);

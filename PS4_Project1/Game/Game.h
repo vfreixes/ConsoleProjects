@@ -43,7 +43,6 @@ namespace Game {
 
 	struct GameData
 	{
-		GameObject player;
 		std::vector<GameObject*> balls;
 		std::vector<GameObject*> prevBalls;
 		std::vector<PossibleCollission> coll;
