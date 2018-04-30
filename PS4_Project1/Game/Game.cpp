@@ -5,6 +5,7 @@
 #include <unordered_map>
 
 #include <vector>
+#include <string>
 #include <algorithm>
 
 using namespace Game;
@@ -13,7 +14,17 @@ GameData *Game::CreateGameData() {
 
 	GameData* gameData = new GameData;
 	
-	GameObject* ball = new GameObject;
+	for (int i = 0; i < 5.0f; ++i){
+		for (int j = 0; j < 5.0f; ++j) {
+			GameObject* ball = new GameObject;
+			ball->pos = glm::vec2(-200.0f + i * 50.0f, 100 + j * 50.0f);
+			ball->vel = glm::vec2(-40.0f, .0f);
+			ball->radi = 20.0f;
+			ball->mass = 15.0f;
+			gameData->balls.push_back(ball);
+		}
+	}
+	/*GameObject* ball = new GameObject;
 
 	ball->pos = glm::vec2(-200.0f, .0f);
 	ball->vel = glm::vec2(-40.0f, .0f);
@@ -27,7 +38,7 @@ GameData *Game::CreateGameData() {
 	ball2->vel = glm::vec2(40.0f, .0f);
 	ball2->radi = 20.0f;
 	ball2->mass = 15.0f;
-	gameData->balls.push_back(ball2);
+	gameData->balls.push_back(ball2);*/
 	
 	/*for (int i = 0; i < 11; i++)
 	{
@@ -45,7 +56,7 @@ void Game::DestroyGameData(GameData* gameData) {
 	delete gameData;
 }
 
-std::vector<PossibleCollission> SortAndSweep(const std::vector<GameObject*>& gameObjects)
+std::vector<PossibleCollission> Game::SortAndSweep(const std::vector<GameObject*>& gameObjects)
 {
 	struct Extreme
 	{
@@ -107,47 +118,22 @@ std::vector<PossibleCollission> SortAndSweep(const std::vector<GameObject*>& gam
 	return result;
 }
 
-std::vector<ContactGroup> GenerateContactGroups(std::vector<ContactData> contactData)
+std::vector<ContactGroup> Game::GenerateContactGroups(std::vector<ContactData>& contactData)
 {
-	// si ordenem podem "simplificar" la segona part.
-	// sense probar-ho no podem saber si és més optim o no.
-
-	std::sort(contactData.begin(), contactData.end(), [](const ContactData& a, const ContactData& b) // aquesta lambda serveix per ordenar i és equivalent a "a < b"
-	{
-		// ens assegurem que el contacte estigui ben generat
-		assert(a.a < a.b || a.b == nullptr);
-		assert(b.a < b.b || b.b == nullptr); // contactes amb l'element "b" a null son contactes amb objectes de massa infinita (parets, pex)
-		
-		if(a.a < b.a)
-			return true;
-		else if(a.a > b.a)
-			return false;
-		else if(a.b < b.b)
-			return true;
-		else
-			return false;
-	});
-
-
 	std::vector<ContactGroup> result;
 	std::unordered_map<GameObject*, ContactGroup*> createdGroups;
 
 	result.reserve(contactData.size());
 
-	for (int i = 0; i < contactData.size(); ++i)
-	{
-		auto it = createdGroups.find(contactData[i].a); // busquem si ja tenim alguna colisió amb l'objecte "a"
-		if (it == createdGroups.end())
-		{
-			it = createdGroups.find(contactData[i].b); // busquem si ja tenim alguna colisió amb l'objecte "b"
-
-			if (it == createdGroups.end())
-			{
+	for (int i = 0; i < contactData.size(); ++i) {
+		auto it = createdGroups.find(contactData[i].a);
+		if (it == createdGroups.end()) {
+			it = createdGroups.find(contactData[i].b);
+			if (it == createdGroups.end()) {
 				ContactGroup group;
 				group.objects.push_back(contactData[i].a);
 				group.objects.push_back(contactData[i].b);
 				group.contacts.push_back(contactData[i]);
-
 				result.push_back(group); // creem la llista de colisions nova
 
 				createdGroups[contactData[i].a] = &result[result.size() - 1]; // guardem referència a aquesta llista
@@ -187,11 +173,11 @@ std::vector<ContactGroup> GenerateContactGroups(std::vector<ContactData> contact
 
 					// 2 - copiem els elements del segon grup i actualitzem el mapa
 					//     de grups
-					for (GameObject* go : groupB->objects)
+					for (GameObject* ball : groupB->objects)
 					{
-						if (go != contactData[i].a)
-							groupA->objects.push_back(go);
-						createdGroups[go] = groupA;
+						if (ball != contactData[i].a)
+							groupA->objects.push_back(ball);
+						createdGroups[ball] = groupA;
 					}
 
 					// 3 - marquem el grup com a buit
@@ -204,11 +190,9 @@ std::vector<ContactGroup> GenerateContactGroups(std::vector<ContactData> contact
 
 	return result;
 }
-void SolvePenetatrion(ContactData *contactData) {
-	contactData->penetration = (contactData->a->radi + contactData->b->radi) - glm::length(contactData->b->radi - contactData->a->radi);
-}
 
-void SolveVelocity(ContactData *contactData) {
+
+void Game::SolveVelocityAndPenetration(ContactData *contactData) {
 	// velocitat d'acostament = a.vel · |b.pos - a.pos|   +   b.vel · |a.pos - b.pos|
 	// velocitat d'acostament = -(a.vel - b.vel) · |a.pos - b.pos|
 	// velocitat de separació (vs) = (a.vel - b.vel) · |a.pos - b.pos|   =   (a.vel - b.vel) ·  collision.normal
@@ -222,48 +206,58 @@ void SolveVelocity(ContactData *contactData) {
 	// impuls = massa * velocitat (Newton * segon)
 	// v' = v + invmass * sum(impulsos[i])
 
-	glm::vec2 vs = (contactData->a->vel - contactData->b->vel) * (float)glm::abs(glm::length(contactData->normal));
+	//-calcular velocitat de separació(Vs)
+	//	// - si Vs > 0
+	//	//   - novaVs = -c * Vs
+	//	//   - totalInvMass = invMass[0] + invMass[1]
+	//	//   - deltaV = novaVs - Vs
+	//	//   - impuls = deltaV / totalInvMass
+	//	//   - impulsPerIMass = contactNormal * impuls
+	//	//   - novaVelA = velA + impulsPerIMass * invMassA
+	//	//   - novaVelB = velB - impulsPerIMass * invMassB
 
-	vs = -((float)contactData->restitution) * vs;
-
-	glm::vec2 impuls1 = (float)contactData->a->mass * contactData->a->vel;
-	glm::vec2 impuls2 = (float)contactData->b->mass * contactData->b->vel;
-	glm::vec2 impulsSum = impuls1 + impuls2;
-
-	contactData->a->vel = contactData->a->vel + contactData->a->mass * impulsSum;
-	contactData->b->vel = contactData->b->vel + contactData->b->mass * impulsSum;
-
-}
-
-ContactData GenerateContactData(GameObject* ball01, GameObject* ball02) {
+	float vs = glm::dot((contactData->a->vel - contactData->b->vel), contactData->normal);
 	
-	ContactData contactData;
-	contactData.a = ball01;
-	contactData.b = ball02;
-	contactData.point = (contactData.a->pos + contactData.b->pos) / 2.0f;
-	contactData.normal = contactData.b->pos - contactData.a->pos;
-	contactData.penetration = (contactData.a->radi + contactData.b->radi) - glm::length(contactData.normal);
-
-	contactData.restitution = 0.9f;
-	contactData.friction = 0.1f;
-
-	return contactData;
-}
-
-
-
-
-
-bool HasCollision(GameObject* ball01, GameObject* ball02) {
-	if ( (ball01->radi + ball02->radi) < glm::length(ball02->pos - ball02->pos) ) {
-		return true;
+	float vsp = .0f; float totalInvMass = .0f; float deltaV = .0f; float impuls = .0f; glm::vec2 impulsPerIMass;
+	if (vs > .0f) {
+		vsp = -(contactData->restitution) * vs;
+		totalInvMass = 1 / contactData->a->mass + 1 / contactData->b->mass;
+		deltaV = vsp - vs;
+		impuls = deltaV / totalInvMass;
+		impulsPerIMass = contactData->normal * impuls;
+		contactData->a->vel += impulsPerIMass * (1 / contactData->a->mass);
+		contactData->b->vel -= impulsPerIMass * (1 / contactData->b->mass);
 	}
-	else return false;
+
+	// resoldre interpendetració
+
+	// desplaçament A + desplaçament B == interpendetració (al llarg de la normal)
+	// massaA * deltaA == massaB * deltaB
+
+	// deltaA =   contactNormal * interpendetració * massaB / (massaA + massaB)
+	// deltaB = - contactNormal * interpendetració * massaA / (massaA + massaB)
+
+
+	// resum:
+	// - si interpendetració > 0
+	//   - totalInvMass = invMass[0] + invMass[1]
+	//   - movePerIMass = contactNormal * (interpendetració / totalInvMass)
+	//   - movimentA =   movePerIMass * invMassA
+	//   - movimentB = - movePerIMass * invMassB
+	contactData->penetration = -glm::length((contactData->a->pos - contactData->b->pos)) + contactData->a->radi + contactData->b->radi;
+	if (contactData->penetration > 0) {
+		totalInvMass = 1 / contactData->a->mass + 1 / contactData->b->mass;
+		glm::vec2 movePerIMass = contactData->normal *(contactData->penetration / totalInvMass);
+		contactData->a->pos -= movePerIMass * (1 / (contactData->a->mass));
+		contactData->b->pos += movePerIMass * (1 / (contactData->b->mass));
+	}
+
+
 }
 
 
 
-void SolveCollissionGroup(const ContactGroup& contactGroup)
+void Game::SolveCollissionGroup(const ContactGroup& contactGroup)
 {
 	std::vector<ContactData> contacts = contactGroup.contacts;
 	int iterations = 0;
@@ -271,9 +265,10 @@ void SolveCollissionGroup(const ContactGroup& contactGroup)
 	{
 		// busquem la penetració més gran
 		ContactData* contactData = nullptr;
-		for (int i = 0; i < contacts.size(); ++i){
-			ContactData& candidate = contacts[i];
-			
+		for (ContactData& candidate : contacts)
+		{
+			candidate.penetration = glm::length((candidate.a->pos + candidate.a->radi) - (candidate.b->pos + candidate.b->radi));
+
 			if (contactData == nullptr || contactData->penetration < candidate.penetration)
 			{
 				contactData = &candidate;
@@ -285,34 +280,35 @@ void SolveCollissionGroup(const ContactGroup& contactGroup)
 			break;
 		}
 
-		SolveVelocity(contactData);
-		SolvePenetatrion(contactData);
+		/*SolveVelocity(contactData);
+		SolvePenetatrion(contactData);*/
+		SolveVelocityAndPenetration(contactData);
+		/*
+		#if ???
+		std::vector<PossibleCollission> possibleCollissions;
+		for (ContactData& cd : contactGroup.contacts)
+		{
+		possibleCollissions.push_back({ cd.a, cd.b });
+		}
 
-//#if ???
-//		std::vector<PossibleCollission> possibleCollissions;
-//		for (ContactData& cd : contactGroup.contacts)
-//		{
-//			possibleCollissions.push_back({ cd.a, cd.b });
-//		}
-//
-//		contacts = FindCollissions(possibleCollissions);
-//#elif ???
-//		contacts = FindCollissions(contactGroup.contacts);
-//#else
+		contacts = FindCollissions(possibleCollissions);
+		#elif ???
+		contacts = FindCollissions(contactGroup.contacts);
+		#else
 		// tornem a generar contactes per al grup
 		contacts.clear();
 		for (int i = 0; i < contactGroup.objects.size(); ++i)
 		{
-			for (int j = i + 1; j < contactGroup.objects.size(); ++j)
-			{
-				if (HasCollision(contactGroup.objects[i], contactGroup.objects[j]))
-				{
-					ContactData cd = GenerateContactData(contactGroup.objects[i], contactGroup.objects[j]);
-					contacts.push_back(cd);
-				}
-			}
+		for (int j = i + 1; j < contactGroup.objects.size(); ++j)
+		{
+		if (HasCollision(contactGroup.objects[i], contactGroup.objects[j]))
+		{
+		ContactData cd = GenerateContactData(contactGroup.objects[i], contactGroup.objects[j]);
+		contacts.push_back(cd);
 		}
-//#endif
+		}
+		}
+		#endif*/
 		++iterations;
 	}
 }
@@ -356,7 +352,6 @@ RenderCommands Game::Update(Input const &input, GameData &gameData) {
 		i++;
 	}
 
-
 	//Colisions
 
 	
@@ -364,19 +359,29 @@ RenderCommands Game::Update(Input const &input, GameData &gameData) {
 	
 	std::vector<ContactData> contactData;
 
-	for (int i = 0; i < possibleCollisions.size(); ++i){
-		ContactData ctData = GenerateContactData(possibleCollisions[i].a, possibleCollisions[i].b);
-		contactData.push_back(ctData);
+	for (PossibleCollission posCol : possibleCollisions){
+		float length = glm::length(posCol.a->pos - posCol.b->pos);
+		float sumRad = posCol.a->radi + posCol.b->radi;
+		if (length < sumRad) {
+			ContactData cd;
+			cd.a = posCol.a;
+			cd.b = posCol.b;
+			cd.point = (cd.a->pos + cd.b->pos) / 2.0f;
+			cd.normal = cd.b->pos - cd.a->pos;
+			cd.penetration = (cd.a->radi + cd.b->radi) - glm::length(cd.normal);
+
+			cd.restitution = 0.9f;
+			cd.friction = 0.1f;
+
+			contactData.push_back(cd);
+		}
+			
 	}
 
 	std::vector<ContactGroup> contactGroups = GenerateContactGroups(contactData);
 
-	for (int i = 0; i < contactGroups.size(); i++)
-	{
-		SolveCollissionGroup(contactGroups[i]);
-	}
-	
-	
+	for (ContactGroup contGrp : contactGroups)
+		SolveCollissionGroup(contGrp);
 
 	//sprites
 	for (int i = 0; i < gameData.balls.size(); i++)

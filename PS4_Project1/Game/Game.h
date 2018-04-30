@@ -24,9 +24,9 @@ namespace Game {
 	struct ContactData
 	{
 		struct GameObject *a, *b;
-		glm::dvec2 point, normal;
-		double penetration;
-		double restitution, friction;
+		glm::vec2 point, normal;
+		float penetration;
+		float restitution, friction;
 	};
 
 	struct ContactGroup
@@ -49,6 +49,10 @@ namespace Game {
 	};
 
 	
+	std::vector<PossibleCollission> SortAndSweep(const std::vector<GameObject*>& gameObjects);
+	std::vector<ContactGroup> GenerateContactGroups(std::vector<ContactData>& contactData);
+	void SolveVelocityAndPenetration(ContactData *contactData);
+	void SolveCollissionGroup(const ContactGroup& contactGroup);
 
 	
 
