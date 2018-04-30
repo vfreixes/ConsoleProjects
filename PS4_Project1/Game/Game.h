@@ -10,15 +10,13 @@ namespace Game {
 	struct GameObject
 	{
 		glm::vec2 pos, vel;
-		float radi;
-		float mass;
-		float invMass;
+		float radi, mass, invMass;
 
-		glm::vec2 GetExtreme(glm::vec2 dir) const { return pos + dir * radi; }
+		glm::vec2 GetExtreme(glm::vec2 dir/*, glm::vec2 pos, float radi*/) const { return pos + dir * radi; }
 	};
 
 
-	struct PossibleCollission
+	struct PossibleCollision
 	{
 		GameObject *a, *b;
 	};
@@ -26,8 +24,8 @@ namespace Game {
 	struct ContactData
 	{
 		struct GameObject *a, *b;
-		glm::dvec2 point, normal;
-		double penetatrion;
+		glm::vec2 point, normal;
+		double penetration;
 		double restitution, friction;
 	};
 
@@ -45,10 +43,9 @@ namespace Game {
 
 	struct GameData
 	{
-		GameObject player;
-		std::vector<GameObject> balls;
-		std::vector<GameObject> prevBalls;
-		std::vector<PossibleCollission> coll;
+		std::vector<GameObject*> balls;
+		std::vector<GameObject*> prevBalls;
+		std::vector<PossibleCollision> coll;
 	};
 
 	
