@@ -574,19 +574,19 @@ int __stdcall WinMain(__in HINSTANCE hInstance, __in_opt HINSTANCE hPrevInstance
 
 		if (keyboard['W'])
 		{
-			input.direction.y = +100;
+			input.direction.y = 10;
 		}
 		if (keyboard['S'])
 		{
-			input.direction.y = -100;
+			input.direction.y = -10;
 		}
 		if (keyboard['A'])
 		{
-			input.direction.x = -100;
+			input.direction.x = -10;
 		}
 		if (keyboard['D'])
 		{
-			input.direction.x = +100;
+			input.direction.x = 10;
 		}
 		if (keyboard[VK_RETURN]) {
 			input.direction = { 100, 100 };

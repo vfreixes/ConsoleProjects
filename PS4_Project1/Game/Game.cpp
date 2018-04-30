@@ -315,8 +315,10 @@ RenderCommands Game::Update(Input const &input, GameData &gameData) {
 		
 		//player
 		if (i == 0) {
+			
 			f.x = input.direction.x;
 			f.y = input.direction.y;
+			
 		}
 		glm::vec2 a = f * ball->invMass;
 
