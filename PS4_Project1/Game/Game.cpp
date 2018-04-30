@@ -50,41 +50,24 @@ std::vector<PossibleCollision> SortAndSweep(const std::vector<GameObject*>& game
 	for (GameObject* go : gameObjects)
 	{
 
-		//list.push_back({ go, glm::dot(go->GetExtreme({ -1,0 }, go->pos, go->radi),{ 1,0 }), true });
-		//list.push_back({ go, glm::dot(go->GetExtreme({ 1,0 }, go->pos, go->radi),{ 1,0 }), false });
-
-
 		Extreme tmp = {}, tmp2 = {};
 		tmp.go = new GameObject;
 		tmp.go = go;
-		//tmp.go->pos = go->pos;
-		//tmp.go->radi = go->radi;
 		tmp.p = dot(go->GetExtreme({ -1,0 }), { 1, 0 });
 		tmp.min = true;
 		list.push_back(tmp);
 		
 		tmp2.go = new GameObject;
 		tmp2.go = go;
-		//tmp2.go->pos = go->pos;
-		//tmp2.go->radi = go->radi;
 		tmp2.p = dot(go->GetExtreme({ +1,0 }), { 1, 0 });
 		tmp2.min = false;
 		list.push_back(tmp2);
 
 	}
 
-	std::sort(list.begin(), list.end(), [](const Extreme& first, const Extreme& second)
-	{
-		if (first.p < second.p)
-		{
-			return true;
-		}
-		else
-		{
-			return false;
-		}
-	}); // TODO
-
+	std::sort(list.begin(), list.end(), [](const Extreme& first, const Extreme& second){
+		return first.p < second.p;		
+	});
 	std::vector<PossibleCollision> result;
 
 	for (int i = 0; i < list.size(); ++i)
@@ -108,21 +91,21 @@ std::vector<ContactGroup> GenerateContactGroups(std::vector<ContactData> contact
 	// si ordenem podem "simplificar" la segona part.
 	// sense probar-ho no podem saber si és més optim o no.
 
-	//std::sort(contactData.begin(), contactData.end(), [](const ContactData& a, const ContactData& b) // aquesta lambda serveix per ordenar i és equivalent a "a < b"
-	//{
-	//	// ens assegurem que el contacte estigui ben generat
-	//	assert(a.a < a.b || a.b == nullptr);
-	//	assert(b.a < b.b || b.b == nullptr); // contactes amb l'element "b" a null son contactes amb objectes de massa infinita (parets, pex)
+	std::sort(contactData.begin(), contactData.end(), [](const ContactData& a, const ContactData& b) // aquesta lambda serveix per ordenar i és equivalent a "a < b"
+	{
+		// ens assegurem que el contacte estigui ben generat
+		assert(a.a < a.b || a.b == nullptr);
+		assert(b.a < b.b || b.b == nullptr); // contactes amb l'element "b" a null son contactes amb objectes de massa infinita (parets, pex)
 
-	//	if (a.a < b.a)
-	//		return true;
-	//	else if (a.a > b.a)
-	//		return false;
-	//	else if (a.b < b.b)
-	//		return true;
-	//	else
-	//		return false;
-	//});
+		if (a.a < b.a)
+			return true;
+		else if (a.a > b.a)
+			return false;
+		else if (a.b < b.b)
+			return true;
+		else
+			return false;
+	});
 
 	std::vector<ContactGroup> result;
 	std::unordered_map<GameObject*, ContactGroup*> createdGroups;
@@ -237,6 +220,8 @@ void SolveCollissionGroup(const ContactGroup& contactGroup)
 		ContactData* contactData = nullptr;
 		for (ContactData& candidate : contacts)
 		{
+			
+			candidate.penetration = glm::length((candidate.a->pos + candidate.a->radi) - (candidate.b->pos + candidate.b->radi));
 			if (contactData == nullptr || contactData->penetration < candidate.penetration)
 			{
 				contactData = &candidate;
@@ -256,7 +241,7 @@ void SolveCollissionGroup(const ContactGroup& contactGroup)
 	}
 }
 
-ContactData GenerateContactData(GameObject* cg1, GameObject* cg2) {  //Aixi generem un ContactData pero nose si la part de friccio i tal s'hauria de posar aqui
+ContactData GenerateContactData(GameObject* cg1, GameObject* cg2) {  
 
 
 	ContactData tmp = {};
@@ -325,11 +310,11 @@ RenderCommands Game::Update(Input const &input, GameData &gameData) {
 		distance = glm::distance(coll.a->pos, coll.b->pos);
 		radius = coll.a->radi + coll.b->radi;
 		if (distance < radius) {
-
+			ContactData tmpCD;
+			tmpCD = GenerateContactData(coll.a, coll.b);
+			contactData.push_back(tmpCD);
 		}
-		ContactData tmpCD;
-		tmpCD = GenerateContactData(coll.a, coll.b);
-		contactData.push_back(tmpCD);
+		
 	}
 
 	std::vector<ContactGroup> contactGroup = GenerateContactGroups(contactData);
