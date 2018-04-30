@@ -7,7 +7,7 @@
 #include <vector>
 #include <algorithm>
 
-#define BALLS_MAX 2
+#define BALLS_MAX 10
 #define K0 0.99f
 using namespace Game;
 
@@ -17,15 +17,18 @@ GameData *Game::CreateGameData() {
 	
 	GameObject* ball;
 	
-	for (int i = 0; i < BALLS_MAX; i++)
+	for (int i = 0; i < BALLS_MAX/2; ++i)
 	{
-		ball = new GameObject;
-		ball->pos = glm::vec2(30*i, 100);
-		ball->vel = glm::vec2(10*i, 0);
-		ball->mass = 1;
-		ball->invMass = 1 / ball->mass;
-		ball->radi = 10;
-		gameData->balls.push_back(ball);
+		for (int j = 0; j < BALLS_MAX/2; ++j)
+		{
+			ball = new GameObject;
+			ball->pos = glm::vec2(-100 + 100 * i, -100 + 100 * j);
+			ball->vel = glm::vec2(-40, 0);
+			ball->mass = 1;
+			ball->invMass = 1 / ball->mass;
+			ball->radi = 10;
+			gameData->balls.push_back(ball);
+		}
 	}
 	
 	return gameData;
