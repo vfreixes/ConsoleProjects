@@ -94,21 +94,21 @@ std::vector<ContactGroup> GenerateContactGroups(std::vector<ContactData> contact
 	// si ordenem podem "simplificar" la segona part.
 	// sense probar-ho no podem saber si és més optim o no.
 
-	std::sort(contactData.begin(), contactData.end(), [](const ContactData& a, const ContactData& b) // aquesta lambda serveix per ordenar i és equivalent a "a < b"
-	{
-		// ens assegurem que el contacte estigui ben generat
-		assert(a.a < a.b || a.b == nullptr);
-		assert(b.a < b.b || b.b == nullptr); // contactes amb l'element "b" a null son contactes amb objectes de massa infinita (parets, pex)
+	//std::sort(contactData.begin(), contactData.end(), [](const ContactData& a, const ContactData& b) // aquesta lambda serveix per ordenar i és equivalent a "a < b"
+	//{
+	//	// ens assegurem que el contacte estigui ben generat
+	//	assert(a.a < a.b || a.b == nullptr);
+	//	assert(b.a < b.b || b.b == nullptr); // contactes amb l'element "b" a null son contactes amb objectes de massa infinita (parets, pex)
 
-		if (a.a < b.a)
-			return true;
-		else if (a.a > b.a)
-			return false;
-		else if (a.b < b.b)
-			return true;
-		else
-			return false;
-	});
+	//	if (a.a < b.a)
+	//		return true;
+	//	else if (a.a > b.a)
+	//		return false;
+	//	else if (a.b < b.b)
+	//		return true;
+	//	else
+	//		return false;
+	//});
 
 	std::vector<ContactGroup> result;
 	std::unordered_map<GameObject*, ContactGroup*> createdGroups;
@@ -186,31 +186,67 @@ std::vector<ContactGroup> GenerateContactGroups(std::vector<ContactData> contact
 	return result;
 }
 
-void SolveVelocity(const ContactData* contactData) {
+void SolveVelocityAndPenetration(ContactData *contactData) {
+	// velocitat d'acostament = a.vel · |b.pos - a.pos|   +   b.vel · |a.pos - b.pos|
+	// velocitat d'acostament = -(a.vel - b.vel) · |a.pos - b.pos|
+	// velocitat de separació (vs) = (a.vel - b.vel) · |a.pos - b.pos|   =   (a.vel - b.vel) ·  collision.normal
+
+	// conservació del moment (
+	// a.mass * a.velocitat + b.mass * b.velocitat == a.mass * a'.velocitat + b.mass * b'.velocitat 
+	// vs' = -c * vs
+	// c -> coeficient de restitució (0 - 1)
 
 
-	double vs = glm::dot(contactData->a->vel - contactData->b->vel, contactData->normal);
-	double vs_prima, deltaV, totalInvMass, impuls;
-	glm::vec2 impulsPerIMass;
-	if (vs > 0) {
-		vs_prima = -contactData->restitution * vs;
-		totalInvMass = contactData->a->invMass + contactData->b->invMass;
-		deltaV = vs_prima - vs;
+	// impuls = massa * velocitat (Newton * segon)
+	// v' = v + invmass * sum(impulsos[i])
+
+	//-calcular velocitat de separació(Vs)
+	//	// - si Vs > 0
+	//	//   - novaVs = -c * Vs
+	//	//   - totalInvMass = invMass[0] + invMass[1]
+	//	//   - deltaV = novaVs - Vs
+	//	//   - impuls = deltaV / totalInvMass
+	//	//   - impulsPerIMass = contactNormal * impuls
+	//	//   - novaVelA = velA + impulsPerIMass * invMassA
+	//	//   - novaVelB = velB - impulsPerIMass * invMassB
+
+	float vs = glm::dot((contactData->a->vel - contactData->b->vel), contactData->normal);
+
+	float vsp = .0f; float totalInvMass = .0f; float deltaV = .0f; float impuls = .0f; glm::vec2 impulsPerIMass;
+	if (vs > .0f) {
+		vsp = -(contactData->restitution) * vs;
+		totalInvMass = 1 / contactData->a->mass + 1 / contactData->b->mass;
+		deltaV = vsp - vs;
 		impuls = deltaV / totalInvMass;
-		impulsPerIMass = contactData->normal * (float)impuls;
-		contactData->a->vel = contactData->a->vel + impulsPerIMass * contactData->a->invMass;
-		contactData->b->vel = contactData->b->vel + impulsPerIMass * contactData->b->invMass;
+		impulsPerIMass = contactData->normal * impuls;
+		contactData->a->vel += impulsPerIMass * (1 / contactData->a->mass);
+		contactData->b->vel -= impulsPerIMass * (1 / contactData->b->mass);
 	}
-}
 
-void SolvePenetatrion(ContactData* contactData) {
-	double totalInvMass = contactData->a->invMass + contactData->b->invMass;
-	contactData->penetration = (contactData->a->radi + contactData->b->radi) - glm::length(contactData->b->pos - contactData->a->pos);
+	// resoldre interpendetració
+
+	// desplaçament A + desplaçament B == interpendetració (al llarg de la normal)
+	// massaA * deltaA == massaB * deltaB
+
+	// deltaA =   contactNormal * interpendetració * massaB / (massaA + massaB)
+	// deltaB = - contactNormal * interpendetració * massaA / (massaA + massaB)
+
+
+	// resum:
+	// - si interpendetració > 0
+	//   - totalInvMass = invMass[0] + invMass[1]
+	//   - movePerIMass = contactNormal * (interpendetració / totalInvMass)
+	//   - movimentA =   movePerIMass * invMassA
+	//   - movimentB = - movePerIMass * invMassB
+	contactData->penetration = -glm::length((contactData->a->pos - contactData->b->pos)) + contactData->a->radi + contactData->b->radi;
 	if (contactData->penetration > 0) {
+		totalInvMass = 1 / contactData->a->mass + 1 / contactData->b->mass;
 		glm::vec2 movePerIMass = contactData->normal * (float)(contactData->penetration / totalInvMass);
-		contactData->a->pos -= movePerIMass * contactData->a->invMass;
-		contactData->b->pos += movePerIMass * contactData->b->invMass;
+		contactData->a->pos -= movePerIMass * (1 / (contactData->a->mass));
+		contactData->b->pos += movePerIMass * (1 / (contactData->b->mass));
 	}
+
+
 }
 
 void SolveCollissionGroup(const ContactGroup& contactGroup)
@@ -236,8 +272,7 @@ void SolveCollissionGroup(const ContactGroup& contactGroup)
 			break;
 		}
 
-		SolveVelocity(contactData);
-		SolvePenetatrion(contactData);
+		SolveVelocityAndPenetration(contactData);
 
 
 		++iterations;
