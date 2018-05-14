@@ -4,7 +4,7 @@ PlayStation(R)4 Programmer Tool Runtime Library Release 05.008.001
 * All Rights Reserved.
 */
 
-///game update liniea 580
+///game update liniea 630
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -20,6 +20,11 @@ PlayStation(R)4 Programmer Tool Runtime Library Release 05.008.001
 
 #include "../Game/Common.h"
 #include <pad.h>
+
+#define STBI_ONLY_PNG
+#define STB_IMAGE_IMPLEMENTATION
+#include <stb\stb_image.h>
+
 
 using namespace sce;
 using namespace sce::Gnmx;
@@ -623,6 +628,79 @@ int main(int argc, const char *argv[])
 		// Data was successfully obtained
 	}
 
+	Gnm::Texture texture2;
+	FILE *fp = fopen("/app0/ball.png", "rb");
+	if (fp != NULL)
+	{
+		fseek(fp, 0L, SEEK_END);
+		size_t size = ftell(fp);
+		fseek(fp, 0L, SEEK_SET);
+
+		uint8_t *buffer = new uint8_t[size];
+
+		bool success = readFileContents(buffer, size, fp);
+		if (success)
+		{
+			int x, y, comp;
+			uint8_t *imageData = stbi_load_from_memory(buffer, size, &x, &y, &comp, 4);
+			if (imageData != nullptr)
+			{
+				{
+
+					Gnm::TextureSpec spec;
+					spec.init();
+					spec.m_textureType = Gnm::kTextureType2d;
+					spec.m_width = x;
+					spec.m_height = y;
+					spec.m_depth = 1;
+					spec.m_pitch = 0;
+					spec.m_numMipLevels = 1;
+					spec.m_numSlices = 1;
+					spec.m_format = Gnm::kDataFormatR8G8B8A8UnormSrgb;
+					spec.m_tileModeHint = Gnm::kTileModeDisplay_LinearAligned;
+					spec.m_minGpuMode = gpuMode;
+					spec.m_numFragments = Gnm::kNumFragments1;
+					int32_t status = texture2.init(&spec);
+
+					if (status != SCE_GNM_OK)
+						return status;
+				}
+
+				Gnm::SizeAlign textureSizeAlign = texture2.getSizeAlign();
+
+				// Allocate the texture data using the alignment returned by initAs2d
+				uint8_t *textureData = (uint8_t*)garlicAllocator.allocate(textureSizeAlign);
+				if (!textureData)
+				{
+					printf("Cannot allocate the texture data\n");
+					return SCE_KERNEL_ERROR_ENOMEM;
+				}
+
+				uint32_t pitch = texture2.getPitch();
+
+				for (int j = 0; j < y; ++j)
+					for (int i = 0; i < x; ++i)
+					{
+						textureData[(j * pitch + i) * 4 + 0] = imageData[(j * x + i) * 4 + 0];
+						textureData[(j * pitch + i) * 4 + 1] = imageData[(j * x + i) * 4 + 1];
+						textureData[(j * pitch + i) * 4 + 2] = imageData[(j * x + i) * 4 + 2];
+						textureData[(j * pitch + i) * 4 + 3] = imageData[(j * x + i) * 4 + 3];
+					}
+
+				texture2.setBaseAddress(textureData);
+
+
+				stbi_image_free(imageData);
+			}
+		}
+		delete[] buffer;
+		fclose(fp);
+	}
+
+
+
+
+
 	Game::Input input = {};
 	input.dt = 0.016;
 	input.windowHalfSize = { 940, 540 };
@@ -776,7 +854,7 @@ int main(int argc, const char *argv[])
 		gfxc.setVertexBuffers(Gnm::kShaderStageVs, 0, kVertexElemCount, vertexBuffers);
 
 		// Setup the texture and its sampler on the PS stage
-		gfxc.setTextures(Gnm::kShaderStagePs, 0, 1, &texture);
+		gfxc.setTextures(Gnm::kShaderStagePs, 0, 1, &texture2);
 		gfxc.setSamplers(Gnm::kShaderStagePs, 0, 1, &sampler);
 
 		//// Allocate the vertex shader constants from the command buffer
@@ -820,7 +898,7 @@ int main(int argc, const char *argv[])
 				const Matrix4 scaleMatrix = Matrix4::scale(Vector3(sprite.size.x, sprite.size.y, 1));
 				const Matrix4 rotationMatrix = Matrix4::rotationZ(sprite.rotation);
 				const Matrix4 translateMatrix = Matrix4::translation(Vector3(sprite.position.x, sprite.position.y, 0));
-				const Matrix4 orthoMatrix = Matrix4::orthographic(-100 * kAspectRatio, 100 * kAspectRatio, -100, 100, 0, 1);
+				//const Matrix4 orthoMatrix = Matrix4::orthographic(-100 * kAspectRatio, 100 * kAspectRatio, -100, 100, 0, 1);
 				const Matrix4 projection = Matrix4::orthographic(-(float)input.windowHalfSize.x, (float)input.windowHalfSize.x, -(float)input.windowHalfSize.y, (float)input.windowHalfSize.y, -5.0f, 5.0f);
 				constants->m_WorldViewProj = (projection * translateMatrix * rotationMatrix * scaleMatrix);
 

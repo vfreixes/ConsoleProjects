@@ -1,8 +1,1 @@
-﻿  glew.c
-  MainWin.cpp
-c:\users\alumno\documents\consoleprojects\ps4_project1\windowsmain\mainwin.cpp(423): warning C4267: '=': conversion from 'size_t' to 'uint32_t', possible loss of data
-c:\users\alumno\documents\consoleprojects\ps4_project1\windowsmain\mainwin.cpp(424): warning C4267: '=': conversion from 'size_t' to 'uint32_t', possible loss of data
-c:\users\alumno\documents\consoleprojects\ps4_project1\windowsmain\mainwin.cpp(474): warning C4305: 'argument': truncation from 'double' to 'GLclampf'
-c:\users\alumno\documents\consoleprojects\ps4_project1\windowsmain\mainwin.cpp(552): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
-c:\users\alumno\documents\consoleprojects\ps4_project1\windowsmain\mainwin.cpp(627): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-  WindowsMain.vcxproj -> C:\Users\Alumno\Documents\ConsoleProjects\PS4_Project1\x64\Debug\WindowsMain.exe
+﻿  WindowsMain.vcxproj -> C:\Users\Alumno\Downloads\ConsoleProjects\PS4_Project1\x64\Debug\WindowsMain.exe
