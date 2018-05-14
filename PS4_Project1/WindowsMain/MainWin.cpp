@@ -1,6 +1,7 @@
 #include <Windows.h>
 
 #include "../Game/Common.h"
+#include "../Game/imgui.h"
 
 #include <GL/glew.h>
 #include <GL/wglew.h>
@@ -18,6 +19,9 @@
 #define STB_IMAGE_IMPLEMENTATION
 
 #include "stb\stb_image.h"
+
+#define GET_X_LPARAM(lp) ((int)(short)LOWORD(lp))
+#define GET_Y_LPARAM(lp) ((int)(short)HIWORD(lp))
 
 static bool windowActive = true;
 static size_t screenWidth = 1920, screenHeight = 1080;
@@ -53,6 +57,8 @@ struct RendererData
 	// map of all textures available
 	GLuint textures[(int)Game::RenderCommands::TextureNames::COUNT];
 };
+
+
 
 struct FullFile
 {
@@ -424,9 +430,35 @@ void init(Game::Input &inputData, Game::GameData *&gameData, Game::RenderCommand
 	renderCommands.orthoHeight = screenHeight;
 	inputData.windowHalfSize = { screenWidth / 2.0, screenHeight / 2.0 };
 
+	
+
+
 	//Init textures
 	rendererData.textures[(int)Game::RenderCommands::TextureNames::BALLS] = LoadTexture("ball.png");
 	rendererData.textures[(int)Game::RenderCommands::TextureNames::PLAYER] = LoadTexture("player.png");
+	
+	GLuint imGUITex;
+
+	glGenTextures(1, &imGUITex);
+	// TODO reload imgui
+	uint8_t* pixels;
+	int width, height;
+	ImGui::GetIO().Fonts[0].GetTexDataAsRGBA32(&pixels, &width, &height, nullptr);
+
+	glBindTexture(GL_TEXTURE_2D, imGUITex);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+	GLenum formats[4] = { GL_RED, GL_RG, GL_RGB, GL_RGBA };
+
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA,
+		(GLsizei)width, (GLsizei)height,
+		0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+
+	rendererData.textures[(int)Game::RenderCommands::TextureNames::IMGUI] = imGUITex;
 
 	//Init Render Data
 	GLint vs = 0, ps = 0;
@@ -537,6 +569,42 @@ void manageInput(bool &quit) {
 	}
 }
 
+//inline bool HandleMouse(const MSG& msg, Input &data_)
+//{
+//	if (msg.message == WM_LBUTTONDOWN)
+//	{
+//		data_.clicking = true;
+//		data_.clickDown = true;
+//		return true;
+//	}
+//	else if (msg.message == WM_LBUTTONUP)
+//	{
+//		data_.clicking = false;
+//		return true;
+//	}
+//	else if (msg.message == WM_RBUTTONDOWN)
+//	{
+//		data_.clickingRight = true;
+//		data_.clickDownRight = true;
+//		return true;
+//	}
+//	else if (msg.message == WM_RBUTTONUP)
+//	{
+//		data_.clickingRight = false;
+//		return true;
+//	}
+//	else if (msg.message == WM_MOUSEMOVE)
+//	{
+//		data_.mousePosition.x = GET_X_LPARAM(msg.lParam);
+//		data_.mousePosition.y = GET_Y_LPARAM(msg.lParam);
+//		return true;
+//	}
+//	else
+//	{
+//		return false;
+//	}
+//}
+
 int __stdcall WinMain(__in HINSTANCE hInstance, __in_opt HINSTANCE hPrevInstance, __in_opt LPSTR lpCmdLine, __in int nShowCmd) {
 	
 	// load window stuff
@@ -550,6 +618,16 @@ int __stdcall WinMain(__in HINSTANCE hInstance, __in_opt HINSTANCE hPrevInstance
 	if (!RegisterClass(&wc))
 		return 1;
 	HWND hWnd = CreateWindowW(wc.lpszClassName, L"Billar", WS_OVERLAPPEDWINDOW | WS_VISIBLE, 0, 0, screenWidth, screenHeight, 0, 0, hInstance, 0);
+
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGuiIO& io = ImGui::GetIO(); (void)io;
+	//io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;  // Enable Keyboard Controls
+	//io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;   // Enable Gamepad Controls
+
+	// Setup style
+	ImGui::StyleColorsDark();
+	//ImGui::StyleColorsClassic();
 	
 	//Time
 	LARGE_INTEGER l_LastFrameTime;
@@ -559,6 +637,32 @@ int __stdcall WinMain(__in HINSTANCE hInstance, __in_opt HINSTANCE hPrevInstance
 	Game::GameData *gameData = Game::CreateGameData();
 	Game::Input input = {};
 	Game::RenderCommands renderCommands = Game::Update(input, *gameData);
+
+	//Init imGUI Input
+	ImGui::CreateContext();
+
+	io.BackendFlags |= ImGuiBackendFlags_HasMouseCursors;   // We can honor GetMouseCursor() values (optional)
+	io.BackendFlags |= ImGuiBackendFlags_HasSetMousePos;    // We can honor io.WantSetMousePos requests (optional, rarely used)
+
+	io.KeyMap[ImGuiKey_Tab] = VK_TAB;                     // Keyboard mapping. ImGui will use those indices to peek into the io.KeyDown[] array.
+	io.KeyMap[ImGuiKey_LeftArrow] = VK_LEFT;
+	io.KeyMap[ImGuiKey_RightArrow] = VK_RIGHT;
+	io.KeyMap[ImGuiKey_UpArrow] = VK_UP;
+	io.KeyMap[ImGuiKey_DownArrow] = VK_DOWN;
+	io.KeyMap[ImGuiKey_PageUp] = VK_PRIOR;
+	io.KeyMap[ImGuiKey_PageDown] = VK_NEXT;
+	io.KeyMap[ImGuiKey_Home] = VK_HOME;
+	io.KeyMap[ImGuiKey_End] = VK_END;
+	io.KeyMap[ImGuiKey_Delete] = VK_DELETE;
+	io.KeyMap[ImGuiKey_Backspace] = VK_BACK;
+	io.KeyMap[ImGuiKey_Enter] = VK_RETURN;
+	io.KeyMap[ImGuiKey_Escape] = VK_ESCAPE;
+	io.KeyMap[ImGuiKey_A] = 'A';
+	io.KeyMap[ImGuiKey_C] = 'C';
+	io.KeyMap[ImGuiKey_V] = 'V';
+	io.KeyMap[ImGuiKey_X] = 'X';
+	io.KeyMap[ImGuiKey_Y] = 'Y';
+	io.KeyMap[ImGuiKey_Z] = 'Z';
 	
 	RendererData rendererData;
 	rendererData.instanceDataBuffer = 0;
@@ -594,7 +698,12 @@ int __stdcall WinMain(__in HINSTANCE hInstance, __in_opt HINSTANCE hPrevInstance
 
 		renderCommands = Game::Update(input, *gameData);
 
+		
+		//ImGui::SetNextWindowPos(ImVec2(650, 20), ImGuiCond_FirstUseEver); // Normally user code doesn't need/want to call this because positions are saved in .ini file anyway. Here we just want to make the demo initial state a bit more friendly!
+		ImGui::ShowDemoWindow();
+
 		if (s_OpenGLRenderingContext != nullptr) {
+			ImGui::Render();
 			render(rendererData, renderCommands);
 		}
 
@@ -625,6 +734,9 @@ int __stdcall WinMain(__in HINSTANCE hInstance, __in_opt HINSTANCE hPrevInstance
 		}
 
 		input.dt = (double)l_TicksPerFrame / (double)l_PerfCountFrequency;
+
+		ImGui::NewFrame();
+
 	} while (!quit);
 
 	Game::DestroyGameData(gameData);

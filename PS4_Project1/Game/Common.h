@@ -21,6 +21,7 @@ namespace Game {
 			PLAYER,
 			BALLS,
 			TABLE,
+			IMGUI,
 			COUNT
 		};
 
