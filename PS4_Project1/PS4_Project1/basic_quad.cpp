@@ -696,8 +696,13 @@ int main(int argc, const char *argv[])
 		delete[] buffer;
 		fclose(fp);
 	}
-
-
+	//default gamepad color
+	SceUserServiceUserColor userColor;
+	ret = sceUserServiceGetUserColor(userId, &userColor);
+	if (ret < 0) {
+		/* Failed to obtain user ID value */
+		return ret;
+	}
 
 
 
@@ -706,10 +711,13 @@ int main(int argc, const char *argv[])
 	input.windowHalfSize = { 940, 540 };
 	ScePadData currentScePad;
 	//////// GameUpdate
+	bool changeColor = false;
+	bool vibrate = false;
 	for(uint32_t frameIndex = 0; frameIndex < 1000; )
 	{
 
 		///Get button Circle
+		
 		
 		int ret = scePadReadState(player1GamepadHandle, &currentScePad);
 		if (ret == SCE_OK) {
@@ -721,9 +729,42 @@ int main(int argc, const char *argv[])
 				input.buttonPressed = true;
 				input.direction = { 100, 100 };
 			}
+			if ((currentScePad.buttons & SCE_PAD_BUTTON_CROSS) != 0 && (prevScePad.buttons & SCE_PAD_BUTTON_CROSS) == 0)
+			{
+				changeColor = !changeColor;
+			}
+			if ((currentScePad.buttons & SCE_PAD_BUTTON_TRIANGLE) != 0 && (prevScePad.buttons & SCE_PAD_BUTTON_TRIANGLE) == 0)
+			{
+				vibrate = !vibrate;
+			}
 
 			// save prev state
 			prevScePad = currentScePad;
+		}
+		if (changeColor)
+		{
+			ScePadLightBarParam param; // is an error that the largest "color" is less than 13 (can't "close" the light)
+			param.r = 255;//rand() % 13 + 242;
+			param.g = 20;//rand() % 13 + 242;
+			param.b = 147;// rand() % 13 + 242;
+			scePadSetLightBar(player1GamepadHandle, &param);
+		}
+		else
+		{
+			scePadResetLightBar(player1GamepadHandle);
+		}
+
+		if (vibrate) {
+			ScePadVibrationParam param = {};
+			param.smallMotor = (uint8_t)(127);
+			param.largeMotor = (uint8_t)(127);
+			scePadSetVibration(player1GamepadHandle, &param);
+		}
+		else {
+			ScePadVibrationParam param = {};
+			param.smallMotor = (uint8_t)(0);
+			param.largeMotor = (uint8_t)(0);
+			scePadSetVibration(player1GamepadHandle, &param);
 		}
 
 		// get the gamepad info (4 deadzones)
@@ -853,40 +894,6 @@ int main(int argc, const char *argv[])
 		// gfxc.drawXxx method.
 		gfxc.setVertexBuffers(Gnm::kShaderStageVs, 0, kVertexElemCount, vertexBuffers);
 
-		// Setup the texture and its sampler on the PS stage
-		gfxc.setTextures(Gnm::kShaderStagePs, 0, 1, &texture2);
-		gfxc.setSamplers(Gnm::kShaderStagePs, 0, 1, &sampler);
-
-		//// Allocate the vertex shader constants from the command buffer
-		//ShaderConstants *constants = static_cast<ShaderConstants*>(
-		//	gfxc.allocateFromCommandBuffer(sizeof(ShaderConstants), Gnm::kEmbeddedDataAlignment4) );
-
-		//// Initialize the vertex shader constants
-		//if( constants )
-		//{
-		//	static float angle = 0.0f;
-		//	angle += 1.0f / 120.0f;
-		//	const float kAspectRatio = float(kDisplayBufferWidth) / float(kDisplayBufferHeight);
-		//	const Matrix4 rotationMatrix = Matrix4::rotationZ(angle);
-		//	const Matrix4 scaleMatrix = Matrix4::scale(Vector3(1, kAspectRatio, 1));
-		//	constants->m_WorldViewProj = (scaleMatrix * rotationMatrix);
-
-		//	Gnm::Buffer constBuffer;
-		//	constBuffer.initAsConstantBuffer(constants, sizeof(ShaderConstants));
-		//	gfxc.setConstantBuffers(Gnm::kShaderStageVs, 0, 1, &constBuffer);
-		//}
-		//else
-		//{
-		//	printf("Cannot allocate vertex shader constants\n");
-		//}
-
-		//// Submit a draw call
-		//gfxc.setPrimitiveType(Gnm::kPrimitiveTypeTriList);
-		//gfxc.setIndexSize(Gnm::kIndexSize16);
-		//gfxc.drawIndex(kIndexCount, indexData);
-
-
-
 		// render sprites in the ps4 modifying the sample
 		for (Game::RenderCommands::Sprite &sprite : renderCommands.sprites)
 		{
@@ -906,6 +913,11 @@ int main(int argc, const char *argv[])
 				constBuffer.initAsConstantBuffer(constants, sizeof(ShaderConstants));
 				gfxc.setConstantBuffers(Gnm::kShaderStageVs, 0, 1, &constBuffer);
 
+				if (sprite.texture == Game::RenderCommands::TextureNames::PLAYER) {
+					gfxc.setTextures(Gnm::kShaderStagePs, 0, 1, &texture);
+				}
+				else gfxc.setTextures(Gnm::kShaderStagePs, 0, 1, &texture2);
+				gfxc.setSamplers(Gnm::kShaderStagePs, 0, 1, &sampler);
 				// Submit a draw call
 				gfxc.drawIndex(kIndexCount, indexData);
 			}

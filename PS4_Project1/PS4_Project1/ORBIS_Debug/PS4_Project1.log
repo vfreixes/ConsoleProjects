@@ -1,1 +1,8 @@
-﻿  PS4_Project1.vcxproj -> C:\Users\Alumno\Downloads\ConsoleProjects\PS4_Project1\ORBIS_Debug\PS4_Project1.elf
+﻿  basic_quad.cpp
+C:\Users\Alumno\Downloads\ConsoleProjects\PS4_Project1\PS4_Project1\basic_quad.cpp(904,17): warning : unused variable 'kAspectRatio' [-Wunused-variable]
+C:\Users\Alumno\Downloads\ConsoleProjects\PS4_Project1\PS4_Project1\basic_quad.cpp(779,13): warning : unused variable 'leftStick' [-Wunused-variable]
+  In file included from C:\Users\Alumno\Downloads\ConsoleProjects\PS4_Project1\PS4_Project1\basic_quad.cpp:26:
+C:\Users\Alumno\Downloads\ConsoleProjects\PS4_Project1\\deps\Include\stb\stb_image.h(660,12): warning : unused function 'stbi__sse2_available' [-Wunused-function]
+C:\Users\Alumno\Downloads\ConsoleProjects\PS4_Project1\\deps\Include\stb\stb_image.h(1073,13): warning : unused function 'stbi__vertical_flip_slices' [-Wunused-function]
+C:\Users\Alumno\Downloads\ConsoleProjects\PS4_Project1\\deps\Include\stb\stb_image.h(1135,13): warning : unused function 'stbi__float_postprocess' [-Wunused-function]
+  PS4_Project1.vcxproj -> C:\Users\Alumno\Downloads\ConsoleProjects\PS4_Project1\ORBIS_Debug\PS4_Project1.elf
