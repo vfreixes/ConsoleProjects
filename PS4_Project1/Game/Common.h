@@ -14,6 +14,8 @@ namespace Game {
 		float dir;
 		glm::vec2 direction;
 		glm::vec2 windowHalfSize;
+		bool clicking, clickDown, clickingRight, clickDownRight;
+		glm::vec2 mousePosition;
 	};
 
 	struct RenderCommands {

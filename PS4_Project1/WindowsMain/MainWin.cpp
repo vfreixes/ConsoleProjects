@@ -488,6 +488,7 @@ void init(Game::Input &inputData, Game::GameData *&gameData, Game::RenderCommand
 		glDeleteShader(ps);
 
 }
+
 inline void RenderDearImgui(const RendererData &renderer)
 {
 	ImDrawData* draw_data = ImGui::GetDrawData();
@@ -574,7 +575,6 @@ inline void RenderDearImgui(const RendererData &renderer)
 	glViewport(last_viewport[0], last_viewport[1], (GLsizei)last_viewport[2], (GLsizei)last_viewport[3]);
 }
 
-
 void render(RendererData &rendererData, Game::RenderCommands &renderCommands) {
 	glm::mat4 projection = glm::ortho(-(screenWidth / 2.0f), (screenWidth / 2.0f), -(screenHeight / 2.0f), (screenHeight / 2.0f), -5.0f, 5.0f);
 	// preparation:
@@ -612,7 +612,6 @@ void render(RendererData &rendererData, Game::RenderCommands &renderCommands) {
 	RenderDearImgui(rendererData);
 	SwapBuffers(s_WindowHandleToDeviceContext);
 }
-
 
 void initIMGUI(RendererData &renderer) {
 	//uniform buffer
@@ -682,10 +681,45 @@ void initIMGUI(RendererData &renderer) {
 	
 }
 
+inline bool HandleMouse(const MSG& msg, Game::Input &data_)
+{
+	if (msg.message == WM_LBUTTONDOWN)
+	{
+		data_.clicking = true;
+		data_.clickDown = true;
+		return true;
+	}
+	else if (msg.message == WM_LBUTTONUP)
+	{
+		data_.clicking = false;
+		return true;
+	}
+	else if (msg.message == WM_RBUTTONDOWN)
+	{
+		data_.clickingRight = true;
+		data_.clickDownRight = true;
+		return true;
+	}
+	else if (msg.message == WM_RBUTTONUP)
+	{
+		data_.clickingRight = false;
+		return true;
+	}
+	else if (msg.message == WM_MOUSEMOVE)
+	{
+		data_.mousePosition.x = GET_X_LPARAM(msg.lParam);
+		data_.mousePosition.y = GET_Y_LPARAM(msg.lParam);
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
 
 
-void manageInput(bool &quit) {
-	MSG msg = {};
+void manageInput(MSG& msg, bool &quit, Game::Input &input) {
+	
 	while (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
 	{
 		bool processed = false;
@@ -714,8 +748,15 @@ void manageInput(bool &quit) {
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
 		}
+
+		bool fHandled = false;
+		if (msg.message >= WM_MOUSEFIRST && msg.message <= WM_MOUSELAST)
+		{
+			fHandled = HandleMouse(msg, input);
+		}
 	}
 }
+
 
 int __stdcall WinMain(__in HINSTANCE hInstance, __in_opt HINSTANCE hPrevInstance, __in_opt LPSTR lpCmdLine, __in int nShowCmd) {
 	
@@ -743,6 +784,7 @@ int __stdcall WinMain(__in HINSTANCE hInstance, __in_opt HINSTANCE hPrevInstance
 	RendererData rendererData;
 	rendererData.instanceDataBuffer = 0;
 	rendererData.myShader = 0;
+	rendererData.imguiShader = 0;
 	rendererData.vao = 0;
 	rendererData.vertexArray = 0;
 	
@@ -756,6 +798,9 @@ int __stdcall WinMain(__in HINSTANCE hInstance, __in_opt HINSTANCE hPrevInstance
 	//mapa tecles imgui
 	//ImGui::CreateContext();
 	ImGuiIO& io = ImGui::GetIO();
+	io.BackendFlags |= ImGuiBackendFlags_HasMouseCursors;   // We can honor GetMouseCursor() values (optional)
+	io.BackendFlags |= ImGuiBackendFlags_HasSetMousePos;    // We can honor io.WantSetMousePos requests (optional, rare
+	
 	io.KeyMap[ImGuiKey_Tab] = VK_TAB;                     // Keyboard mapping. ImGui will use those indices to peek into the io.KeyDown[] array.
 	io.KeyMap[ImGuiKey_LeftArrow] = VK_LEFT;
 	io.KeyMap[ImGuiKey_RightArrow] = VK_RIGHT;
@@ -778,11 +823,19 @@ int __stdcall WinMain(__in HINSTANCE hInstance, __in_opt HINSTANCE hPrevInstance
 
 	do
 	{
-		io.DeltaTime = 0.016;
+		
 
 		io.DisplaySize = ImVec2(screenWidth, screenHeight);
 		ImGui::NewFrame();
-		manageInput(quit);
+		manageInput(msg, quit, input);
+
+		io.DeltaTime = input.dt;
+		io.DisplaySize = ImVec2(screenWidth, screenHeight);
+		io.MouseDown[0] = input.clicking;
+		io.MouseDown[1] = input.clickingRight;
+		
+		io.MousePos.x = input.mousePosition.x;
+		io.MousePos.y = input.mousePosition.y;
 
 		if (keyboard['W'])
 		{
@@ -810,8 +863,6 @@ int __stdcall WinMain(__in HINSTANCE hInstance, __in_opt HINSTANCE hPrevInstance
 		
 		if (s_OpenGLRenderingContext != nullptr) {
 			render(rendererData, renderCommands);
-			//ImGui::Render();
-			//RenderDearImgui(rendererData);
 		}
 
 		
@@ -844,6 +895,7 @@ int __stdcall WinMain(__in HINSTANCE hInstance, __in_opt HINSTANCE hPrevInstance
 		}
 
 		input.dt = (double)l_TicksPerFrame / (double)l_PerfCountFrequency;
+		
 	} while (!quit);
 
 	Game::DestroyGameData(gameData);
