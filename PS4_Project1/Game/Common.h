@@ -20,7 +20,7 @@ namespace Game {
 		enum class TextureNames {
 			PLAYER,
 			BALLS,
-			TABLE,
+			IMGUI,
 			COUNT
 		};
 
