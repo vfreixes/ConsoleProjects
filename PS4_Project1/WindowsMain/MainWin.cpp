@@ -20,6 +20,10 @@
 
 #include "stb\stb_image.h"
 
+
+#define GET_X_LPARAM(lp) ((int)(short)LOWORD(lp))
+#define GET_Y_LPARAM(lp) ((int)(short)HIWORD(lp))
+
 static bool windowActive = true;
 static size_t screenWidth = 1920, screenHeight = 1080;
 bool keyboard[256] = {};
@@ -57,8 +61,8 @@ struct RendererData
 	//imgui
 	static constexpr int BuffersSize = 0x10000;
 
-
-	GLuint vertexArray;
+	GLint imguiShader;
+	GLuint vertexArray=0;
 	GLuint vao;
 	GLuint uniform;
 	GLuint program;
@@ -131,6 +135,13 @@ static const char* vertexShader = (char*)verShad.data;
 FullFile pixShad = ReadFullFile(L"Simple.fs");
 
 static const char* pixelShader = (char*)pixShad.data;
+
+FullFile imguiVerShad = ReadFullFile(L"DearImgui.vert");
+static const char* imguiVertShader = (char*)imguiVerShad.data;
+
+FullFile imguiFragShad = ReadFullFile(L"DearImgui.frag");
+static const char* imguiFragShader = (char*)imguiFragShad.data;
+
 
 
 inline void GLAPIENTRY openGLDebugCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* userParam)
@@ -469,6 +480,7 @@ void init(Game::Input &inputData, Game::GameData *&gameData, Game::RenderCommand
 
 		rendererData.quadVAO = CreateVertexArrayObject(vtxs, 4, idxs, 6);
 	}
+	
 
 	if (vs > 0)
 		glDeleteShader(vs);
@@ -476,126 +488,6 @@ void init(Game::Input &inputData, Game::GameData *&gameData, Game::RenderCommand
 		glDeleteShader(ps);
 
 }
-
-
-void render(RendererData &rendererData, Game::RenderCommands &renderCommands) {
-	glm::mat4 projection = glm::ortho(-(screenWidth / 2.0f), (screenWidth / 2.0f), -(screenHeight / 2.0f), (screenHeight / 2.0f), -5.0f, 5.0f);
-	// preparation:
-	glClearColor(0, 0.1, 0, 1);
-	glClear(GL_COLOR_BUFFER_BIT);
-
-	glUseProgram(rendererData.myShader);
-	glActiveTexture(GL_TEXTURE0 + 0);
-	// render all sprites
-	for (auto sprite : renderCommands.sprites)
-	{
-		glBindTexture(GL_TEXTURE_2D, rendererData.textures[(int)sprite.texture]); // get the right texture
-
-																				  // create the model matrix, with a scale and a translation.
-		glm::mat4 model = glm::scale(glm::translate(glm::mat4(1.0f), glm::vec3(sprite.position, 0)), glm::vec3(sprite.size, 0));
-		// you may add a rotation, between the scale and the translation. rotate arround the "z" axis.
-
-		// the transform is the addition of the model transformation and the projection
-		InstanceData instanceData = { projection * model , glm::vec4(1,1,1,1) };
-
-		glEnable(GL_BLEND);
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-		glBindBuffer(GL_UNIFORM_BUFFER, rendererData.instanceDataBuffer);
-		glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(InstanceData), (GLvoid*)&instanceData);
-
-		glBindBufferBase(GL_UNIFORM_BUFFER, 0, rendererData.instanceDataBuffer);
-
-		glBindVertexArray(rendererData.quadVAO.vao);
-		glDrawElements(GL_TRIANGLES, rendererData.quadVAO.numIndices, GL_UNSIGNED_SHORT, 0);
-	}
-
-	SwapBuffers(s_WindowHandleToDeviceContext);
-}
-
-
-void initIMGUI(RendererData &renderer) {
-	//uniform buffer
-	glGenBuffers(1, &renderer.uniform);
-
-	glBindBuffer(GL_UNIFORM_BUFFER, renderer.uniform);
-	glBufferData(GL_UNIFORM_BUFFER, sizeof(glm::vec2), nullptr, GL_DYNAMIC_DRAW);
-
-	//imgui texture
-
-	glGenTextures((int)Game::RenderCommands::TextureNames::COUNT, renderer.textures);
-
-	// TODO reload imgui
-	uint8_t* pixels;
-	int width, height;
-	ImGui::GetIO().Fonts[0].GetTexDataAsRGBA32(&pixels, &width, &height, nullptr);
-
-	glBindTexture(GL_TEXTURE_2D, renderer.textures[(int)Game::RenderCommands::TextureNames::IMGUI]);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-
-	GLenum formats[4] = { GL_RED, GL_RG, GL_RGB, GL_RGBA };
-
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA,
-		(GLsizei)width, (GLsizei)height,
-		0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
-
-	//imgui vertex buffer
-
-	glGenVertexArrays(1, &renderer.vao);
-	glGenBuffers(GL_ARRAY_BUFFER, &renderer.vertexArray);
-	
-	
-
-	glBindBuffer(GL_ARRAY_BUFFER, renderer.vertexArray);
-	glBufferData(GL_ARRAY_BUFFER,
-		sizeof(ImDrawVert) * RendererData::BuffersSize,
-		nullptr, GL_DYNAMIC_DRAW);
-
-	glBindVertexArray(renderer.vao);
-
-	glVertexAttribPointer(0, 2, GL_FLOAT, false,
-		sizeof(ImDrawVert),
-		(GLvoid*)offsetof(ImDrawVert, pos));
-	glVertexAttribPointer(1, 2, GL_FLOAT, false,
-		sizeof(ImDrawVert),
-		(GLvoid*)offsetof(ImDrawVert, uv));
-	glVertexAttribPointer(2, 4, GL_UNSIGNED_BYTE, true,
-		sizeof(ImDrawVert),
-		(GLvoid*)offsetof(ImDrawVert, col));
-
-	glEnableVertexAttribArray(0);
-	glEnableVertexAttribArray(1);
-	glEnableVertexAttribArray(2);
-
-	//mapa tecles imgui
-	//ImGui::CreateContext();
-	ImGuiIO& io = ImGui::GetIO();
-	io.KeyMap[ImGuiKey_Tab] = VK_TAB;                     // Keyboard mapping. ImGui will use those indices to peek into the io.KeyDown[] array.
-	io.KeyMap[ImGuiKey_LeftArrow] = VK_LEFT;
-	io.KeyMap[ImGuiKey_RightArrow] = VK_RIGHT;
-	io.KeyMap[ImGuiKey_UpArrow] = VK_UP;
-	io.KeyMap[ImGuiKey_DownArrow] = VK_DOWN;
-	io.KeyMap[ImGuiKey_PageUp] = VK_PRIOR;
-	io.KeyMap[ImGuiKey_PageDown] = VK_NEXT;
-	io.KeyMap[ImGuiKey_Home] = VK_HOME;
-	io.KeyMap[ImGuiKey_End] = VK_END;
-	io.KeyMap[ImGuiKey_Delete] = VK_DELETE;
-	io.KeyMap[ImGuiKey_Backspace] = VK_BACK;
-	io.KeyMap[ImGuiKey_Enter] = VK_RETURN;
-	io.KeyMap[ImGuiKey_Escape] = VK_ESCAPE;
-	io.KeyMap[ImGuiKey_A] = 'A';
-	io.KeyMap[ImGuiKey_C] = 'C';
-	io.KeyMap[ImGuiKey_V] = 'V';
-	io.KeyMap[ImGuiKey_X] = 'X';
-	io.KeyMap[ImGuiKey_Y] = 'Y';
-	io.KeyMap[ImGuiKey_Z] = 'Z';
-}
-
-
 inline void RenderDearImgui(const RendererData &renderer)
 {
 	ImDrawData* draw_data = ImGui::GetDrawData();
@@ -618,7 +510,7 @@ inline void RenderDearImgui(const RendererData &renderer)
 	glDisable(GL_DEPTH_TEST);
 	glEnable(GL_SCISSOR_TEST);
 
-	GLuint program = renderer.program;
+	GLuint program = renderer.imguiShader;
 	glUseProgram(program);
 	glBindBufferBase(GL_UNIFORM_BUFFER, 0, renderer.uniform);
 	//glUseProgram(0); // You may want this if using this code in an OpenGL 3+ context
@@ -681,6 +573,116 @@ inline void RenderDearImgui(const RendererData &renderer)
 	glDisable(GL_SCISSOR_TEST);
 	glViewport(last_viewport[0], last_viewport[1], (GLsizei)last_viewport[2], (GLsizei)last_viewport[3]);
 }
+
+
+void render(RendererData &rendererData, Game::RenderCommands &renderCommands) {
+	glm::mat4 projection = glm::ortho(-(screenWidth / 2.0f), (screenWidth / 2.0f), -(screenHeight / 2.0f), (screenHeight / 2.0f), -5.0f, 5.0f);
+	// preparation:
+	glClearColor(0, 0.1, 0, 1);
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	glUseProgram(rendererData.myShader);
+	glActiveTexture(GL_TEXTURE0 + 0);
+	// render all sprites
+	for (auto sprite : renderCommands.sprites)
+	{
+		glBindTexture(GL_TEXTURE_2D, rendererData.textures[(int)sprite.texture]); // get the right texture
+
+																				  // create the model matrix, with a scale and a translation.
+		glm::mat4 model = glm::scale(glm::translate(glm::mat4(1.0f), glm::vec3(sprite.position, 0)), glm::vec3(sprite.size, 0));
+		// you may add a rotation, between the scale and the translation. rotate arround the "z" axis.
+
+		// the transform is the addition of the model transformation and the projection
+		InstanceData instanceData = { projection * model , glm::vec4(1,1,1,1) };
+
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+		glBindBuffer(GL_UNIFORM_BUFFER, rendererData.instanceDataBuffer);
+		glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(InstanceData), (GLvoid*)&instanceData);
+
+		glBindBufferBase(GL_UNIFORM_BUFFER, 0, rendererData.instanceDataBuffer);
+
+		glBindVertexArray(rendererData.quadVAO.vao);
+		glDrawElements(GL_TRIANGLES, rendererData.quadVAO.numIndices, GL_UNSIGNED_SHORT, 0);
+	}
+
+	ImGui::ShowDemoWindow();
+	ImGui::Render();
+	RenderDearImgui(rendererData);
+	SwapBuffers(s_WindowHandleToDeviceContext);
+}
+
+
+void initIMGUI(RendererData &renderer) {
+	//uniform buffer
+	glGenBuffers(1, &renderer.uniform);
+
+	glBindBuffer(GL_UNIFORM_BUFFER, renderer.uniform);
+	glBufferData(GL_UNIFORM_BUFFER, sizeof(glm::vec2), nullptr, GL_DYNAMIC_DRAW);
+
+	//imgui texture
+
+	glGenTextures((int)Game::RenderCommands::TextureNames::COUNT, renderer.textures);
+
+	// TODO reload imgui
+	uint8_t* pixels;
+	int width, height;
+	ImGui::GetIO().Fonts[0].GetTexDataAsRGBA32(&pixels, &width, &height, nullptr);
+
+	glBindTexture(GL_TEXTURE_2D, renderer.textures[(int)Game::RenderCommands::TextureNames::IMGUI]);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+	GLenum formats[4] = { GL_RED, GL_RG, GL_RGB, GL_RGBA };
+
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA,
+		(GLsizei)width, (GLsizei)height,
+		0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+
+	//imgui vertex buffer
+	GLint vs = 0, ps = 0;
+	if (CompileShader(vs, imguiVertShader, GL_VERTEX_SHADER) && CompileShader(ps, imguiFragShader, GL_FRAGMENT_SHADER) && LinkShaders(renderer.imguiShader, vs, ps))
+	{
+		glGenBuffers(1, &renderer.vertexArray);
+
+		glGenVertexArrays(1, &renderer.vao);
+
+
+		glBindBuffer(GL_ARRAY_BUFFER, renderer.vertexArray);
+		glBufferData(GL_ARRAY_BUFFER,
+			sizeof(ImDrawVert) * RendererData::BuffersSize,
+			nullptr, GL_DYNAMIC_DRAW);
+
+		glBindVertexArray(renderer.vao);
+
+		glVertexAttribPointer(0, 2, GL_FLOAT, false,
+			sizeof(ImDrawVert),
+			(GLvoid*)offsetof(ImDrawVert, pos));
+		glVertexAttribPointer(1, 2, GL_FLOAT, false,
+			sizeof(ImDrawVert),
+			(GLvoid*)offsetof(ImDrawVert, uv));
+		glVertexAttribPointer(2, 4, GL_UNSIGNED_BYTE, true,
+			sizeof(ImDrawVert),
+			(GLvoid*)offsetof(ImDrawVert, col));
+
+		glEnableVertexAttribArray(0);
+		glEnableVertexAttribArray(1);
+		glEnableVertexAttribArray(2);
+	}
+	
+	if (vs > 0)
+		glDeleteShader(vs);
+	if (ps > 0)
+		glDeleteShader(ps);
+
+	
+}
+
+
 
 void manageInput(bool &quit) {
 	MSG msg = {};
@@ -750,8 +752,35 @@ int __stdcall WinMain(__in HINSTANCE hInstance, __in_opt HINSTANCE hPrevInstance
 	initIMGUI(rendererData);
 	bool quit = false;
 	
+
+	//mapa tecles imgui
+	//ImGui::CreateContext();
+	ImGuiIO& io = ImGui::GetIO();
+	io.KeyMap[ImGuiKey_Tab] = VK_TAB;                     // Keyboard mapping. ImGui will use those indices to peek into the io.KeyDown[] array.
+	io.KeyMap[ImGuiKey_LeftArrow] = VK_LEFT;
+	io.KeyMap[ImGuiKey_RightArrow] = VK_RIGHT;
+	io.KeyMap[ImGuiKey_UpArrow] = VK_UP;
+	io.KeyMap[ImGuiKey_DownArrow] = VK_DOWN;
+	io.KeyMap[ImGuiKey_PageUp] = VK_PRIOR;
+	io.KeyMap[ImGuiKey_PageDown] = VK_NEXT;
+	io.KeyMap[ImGuiKey_Home] = VK_HOME;
+	io.KeyMap[ImGuiKey_End] = VK_END;
+	io.KeyMap[ImGuiKey_Delete] = VK_DELETE;
+	io.KeyMap[ImGuiKey_Backspace] = VK_BACK;
+	io.KeyMap[ImGuiKey_Enter] = VK_RETURN;
+	io.KeyMap[ImGuiKey_Escape] = VK_ESCAPE;
+	io.KeyMap[ImGuiKey_A] = 'A';
+	io.KeyMap[ImGuiKey_C] = 'C';
+	io.KeyMap[ImGuiKey_V] = 'V';
+	io.KeyMap[ImGuiKey_X] = 'X';
+	io.KeyMap[ImGuiKey_Y] = 'Y';
+	io.KeyMap[ImGuiKey_Z] = 'Z';
+
 	do
 	{
+		io.DeltaTime = 0.016;
+
+		io.DisplaySize = ImVec2(screenWidth, screenHeight);
 		ImGui::NewFrame();
 		manageInput(quit);
 
@@ -777,11 +806,16 @@ int __stdcall WinMain(__in HINSTANCE hInstance, __in_opt HINSTANCE hPrevInstance
 
 		renderCommands = Game::Update(input, *gameData);
 
+
+		
 		if (s_OpenGLRenderingContext != nullptr) {
 			render(rendererData, renderCommands);
-			ImGui::Render();
-			RenderDearImgui(rendererData);
+			//ImGui::Render();
+			//RenderDearImgui(rendererData);
 		}
+
+		
+		
 
 
 		LARGE_INTEGER PerfCountFrequencyResult;

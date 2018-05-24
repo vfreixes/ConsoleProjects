@@ -1,7 +1,9 @@
 ﻿  MainWin.cpp
-c:\users\alumno\downloads\consoleprojects\ps4_project1\windowsmain\mainwin.cpp(433): warning C4267: '=': conversion from 'size_t' to 'uint32_t', possible loss of data
-c:\users\alumno\downloads\consoleprojects\ps4_project1\windowsmain\mainwin.cpp(434): warning C4267: '=': conversion from 'size_t' to 'uint32_t', possible loss of data
-c:\users\alumno\downloads\consoleprojects\ps4_project1\windowsmain\mainwin.cpp(484): warning C4305: 'argument': truncation from 'double' to 'GLclampf'
-c:\users\alumno\downloads\consoleprojects\ps4_project1\windowsmain\mainwin.cpp(730): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
-c:\users\alumno\downloads\consoleprojects\ps4_project1\windowsmain\mainwin.cpp(812): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+c:\users\alumno\downloads\consoleprojects\ps4_project1\windowsmain\mainwin.cpp(444): warning C4267: '=': conversion from 'size_t' to 'uint32_t', possible loss of data
+c:\users\alumno\downloads\consoleprojects\ps4_project1\windowsmain\mainwin.cpp(445): warning C4267: '=': conversion from 'size_t' to 'uint32_t', possible loss of data
+c:\users\alumno\downloads\consoleprojects\ps4_project1\windowsmain\mainwin.cpp(581): warning C4305: 'argument': truncation from 'double' to 'GLclampf'
+c:\users\alumno\downloads\consoleprojects\ps4_project1\windowsmain\mainwin.cpp(732): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+c:\users\alumno\downloads\consoleprojects\ps4_project1\windowsmain\mainwin.cpp(781): warning C4305: '=': truncation from 'double' to 'float'
+c:\users\alumno\downloads\consoleprojects\ps4_project1\windowsmain\mainwin.cpp(783): warning C4244: 'argument': conversion from '::size_t' to 'float', possible loss of data
+c:\users\alumno\downloads\consoleprojects\ps4_project1\windowsmain\mainwin.cpp(846): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
   WindowsMain.vcxproj -> C:\Users\Alumno\Downloads\ConsoleProjects\PS4_Project1\x64\Debug\WindowsMain.exe
