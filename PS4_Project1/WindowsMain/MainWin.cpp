@@ -2,6 +2,7 @@
 
 #include "../Game/Common.h"
 #include "../Game/imgui.h"
+#include "../Game/Profiler.h"
 
 #include <GL/glew.h>
 #include <GL/wglew.h>
@@ -27,6 +28,8 @@
 static bool windowActive = true;
 static size_t screenWidth = 1920, screenHeight = 1080;
 bool keyboard[256] = {};
+
+Utilities::Profiler profiler;
 
 struct VertexTN
 {
@@ -491,6 +494,7 @@ void init(Game::Input &inputData, Game::GameData *&gameData, Game::RenderCommand
 
 inline void RenderDearImgui(const RendererData &renderer)
 {
+	
 	ImDrawData* draw_data = ImGui::GetDrawData();
 
 	// Avoid rendering when minimized, scale coordinates for retina displays (screen coordinates != framebuffer coordinates)
@@ -607,7 +611,7 @@ void render(RendererData &rendererData, Game::RenderCommands &renderCommands) {
 		glDrawElements(GL_TRIANGLES, rendererData.quadVAO.numIndices, GL_UNSIGNED_SHORT, 0);
 	}
 
-	ImGui::ShowDemoWindow();
+	profiler.DrawProfilerToImGUI(1);
 	ImGui::Render();
 	RenderDearImgui(rendererData);
 	SwapBuffers(s_WindowHandleToDeviceContext);
@@ -760,6 +764,7 @@ void manageInput(MSG& msg, bool &quit, Game::Input &input) {
 
 int __stdcall WinMain(__in HINSTANCE hInstance, __in_opt HINSTANCE hPrevInstance, __in_opt LPSTR lpCmdLine, __in int nShowCmd) {
 	
+	
 	// load window stuff
 	MSG msg = { 0 };
 	WNDCLASS wc = { 0 };
@@ -776,11 +781,12 @@ int __stdcall WinMain(__in HINSTANCE hInstance, __in_opt HINSTANCE hPrevInstance
 	LARGE_INTEGER l_LastFrameTime;
 	int64_t l_PerfCountFrequency;
 
-
+	//Game and input
 	Game::GameData *gameData = Game::CreateGameData();
 	Game::Input input = {};
 	Game::RenderCommands renderCommands = Game::Update(input, *gameData);
 	
+	//Renderer
 	RendererData rendererData;
 	rendererData.instanceDataBuffer = 0;
 	rendererData.myShader = 0;
@@ -788,7 +794,7 @@ int __stdcall WinMain(__in HINSTANCE hInstance, __in_opt HINSTANCE hPrevInstance
 	rendererData.vao = 0;
 	rendererData.vertexArray = 0;
 	
-
+	//init game and imgui
 	init(input, gameData, renderCommands, rendererData, l_LastFrameTime);
 	ImGui::CreateContext();
 	initIMGUI(rendererData);
@@ -820,12 +826,16 @@ int __stdcall WinMain(__in HINSTANCE hInstance, __in_opt HINSTANCE hPrevInstance
 	io.KeyMap[ImGuiKey_X] = 'X';
 	io.KeyMap[ImGuiKey_Y] = 'Y';
 	io.KeyMap[ImGuiKey_Z] = 'Z';
-
+	
+	
+	Utilities::Profiler profiler;
+	profiler.AddProfileMark(Utilities::Profiler::MarkerType::BEGIN, 0, "Main"); // hem de marcar una tasca per a que el profiler funcioni.
+	
+	io.DisplaySize = ImVec2(screenWidth, screenHeight);
+	//Bucle principal
 	do
 	{
 		
-
-		io.DisplaySize = ImVec2(screenWidth, screenHeight);
 		ImGui::NewFrame();
 		manageInput(msg, quit, input);
 
@@ -863,10 +873,8 @@ int __stdcall WinMain(__in HINSTANCE hInstance, __in_opt HINSTANCE hPrevInstance
 		
 		if (s_OpenGLRenderingContext != nullptr) {
 			render(rendererData, renderCommands);
+			//profiler.DrawProfilerToImGUI(1);
 		}
-
-		
-		
 
 
 		LARGE_INTEGER PerfCountFrequencyResult;
@@ -898,6 +906,7 @@ int __stdcall WinMain(__in HINSTANCE hInstance, __in_opt HINSTANCE hPrevInstance
 		
 	} while (!quit);
 
+	profiler.AddProfileMark(Utilities::Profiler::MarkerType::END, 0, "Main");
 	Game::DestroyGameData(gameData);
 
 	OutputDebugStringW(L"HelloWorld");

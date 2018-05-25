@@ -113,6 +113,7 @@
   <ItemGroup>
     <ClInclude Include="Common.h" />
     <ClInclude Include="Game.h" />
+    <ClInclude Include="Profiler.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Game.cpp" />
