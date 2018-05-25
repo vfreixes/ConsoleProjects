@@ -2,10 +2,10 @@
 c:\users\alumno\downloads\consoleprojects\ps4_project1\windowsmain\mainwin.cpp(447): warning C4267: '=': conversion from 'size_t' to 'uint32_t', possible loss of data
 c:\users\alumno\downloads\consoleprojects\ps4_project1\windowsmain\mainwin.cpp(448): warning C4267: '=': conversion from 'size_t' to 'uint32_t', possible loss of data
 c:\users\alumno\downloads\consoleprojects\ps4_project1\windowsmain\mainwin.cpp(585): warning C4305: 'argument': truncation from 'double' to 'GLclampf'
-c:\users\alumno\downloads\consoleprojects\ps4_project1\windowsmain\mainwin.cpp(720): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
-c:\users\alumno\downloads\consoleprojects\ps4_project1\windowsmain\mainwin.cpp(721): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
-c:\users\alumno\downloads\consoleprojects\ps4_project1\windowsmain\mainwin.cpp(784): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
-c:\users\alumno\downloads\consoleprojects\ps4_project1\windowsmain\mainwin.cpp(840): warning C4244: 'argument': conversion from '::size_t' to 'float', possible loss of data
-c:\users\alumno\downloads\consoleprojects\ps4_project1\windowsmain\mainwin.cpp(849): warning C4244: 'argument': conversion from '::size_t' to 'float', possible loss of data
-c:\users\alumno\downloads\consoleprojects\ps4_project1\windowsmain\mainwin.cpp(911): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+c:\users\alumno\downloads\consoleprojects\ps4_project1\windowsmain\mainwin.cpp(714): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
+c:\users\alumno\downloads\consoleprojects\ps4_project1\windowsmain\mainwin.cpp(715): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
+c:\users\alumno\downloads\consoleprojects\ps4_project1\windowsmain\mainwin.cpp(778): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+c:\users\alumno\downloads\consoleprojects\ps4_project1\windowsmain\mainwin.cpp(834): warning C4244: 'argument': conversion from '::size_t' to 'float', possible loss of data
+c:\users\alumno\downloads\consoleprojects\ps4_project1\windowsmain\mainwin.cpp(844): warning C4244: 'argument': conversion from '::size_t' to 'float', possible loss of data
+c:\users\alumno\downloads\consoleprojects\ps4_project1\windowsmain\mainwin.cpp(909): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
   WindowsMain.vcxproj -> C:\Users\Alumno\Downloads\ConsoleProjects\PS4_Project1\x64\Debug\WindowsMain.exe
