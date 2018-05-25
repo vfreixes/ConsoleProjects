@@ -837,7 +837,7 @@ int __stdcall WinMain(__in HINSTANCE hInstance, __in_opt HINSTANCE hPrevInstance
 	{
 		
 		ImGui::NewFrame();
-		profiler.AddProfileMark(Utilities::Profiler::MarkerType::BEGIN, 0, "Main");
+		//profiler.AddProfileMark(Utilities::Profiler::MarkerType::BEGIN, 0, "Main");
 		manageInput(msg, quit, input);
 
 		io.DeltaTime = input.dt;
@@ -867,13 +867,15 @@ int __stdcall WinMain(__in HINSTANCE hInstance, __in_opt HINSTANCE hPrevInstance
 		if (keyboard[VK_RETURN]) {
 			input.direction = { 100, 100 };
 		}
-		//profiler.CreateProfileMarkGuard("GameUpdate", 0, -1);
-		profiler.AddProfileMark(Utilities::Profiler::MarkerType::BEGIN, 0, "GameUpdate");
-		renderCommands = Game::Update(input, *gameData);
-		for (int i = 0; i < 10000000; i++) {
+		
+		profiler.AddProfileMark(Utilities::Profiler::MarkerType::BEGIN, 0, "Update");
+		profiler.AddProfileMark(Utilities::Profiler::MarkerType::BEGIN_FUNCTION, 0, "GameUpdate");
 
-		}
-		profiler.AddProfileMark(Utilities::Profiler::MarkerType::END, 0, "GameUpdate");
+		renderCommands = Game::Update(input, *gameData);
+
+		profiler.AddProfileMark(Utilities::Profiler::MarkerType::END_FUNCTION, 0, "GameUpdate");
+		profiler.AddProfileMark(Utilities::Profiler::MarkerType::END, 0, "Update");
+
 		
 		if (s_OpenGLRenderingContext != nullptr) {
 			render(rendererData, renderCommands);
@@ -907,7 +909,7 @@ int __stdcall WinMain(__in HINSTANCE hInstance, __in_opt HINSTANCE hPrevInstance
 		}
 
 		input.dt = (double)l_TicksPerFrame / (double)l_PerfCountFrequency;
-		//profiler.AddProfileMark(Utilities::Profiler::MarkerType::END, 0, "Main");
+		profiler.AddProfileMark(Utilities::Profiler::MarkerType::END, 0, "Main");
 		ImGui::EndFrame();
 	} while (!quit);
 
