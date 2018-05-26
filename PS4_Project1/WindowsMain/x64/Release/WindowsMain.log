@@ -1,8 +1,16 @@
-﻿  glew.c
-  MainWin.cpp
-MainWin.cpp(261): error C3861: 'ToggleFullscreen': identifier not found
-MainWin.cpp(423): warning C4267: '=': conversion from 'size_t' to 'uint32_t', possible loss of data
-MainWin.cpp(424): warning C4267: '=': conversion from 'size_t' to 'uint32_t', possible loss of data
-MainWin.cpp(474): warning C4305: 'argument': truncation from 'double' to 'GLclampf'
-MainWin.cpp(552): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
-MainWin.cpp(627): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+﻿  MainWin.cpp
+c:\users\-\desktop\consoles\ps4_project1\windowsmain\mainwin.cpp(447): warning C4267: '=': conversion from 'size_t' to 'uint32_t', possible loss of data
+c:\users\-\desktop\consoles\ps4_project1\windowsmain\mainwin.cpp(448): warning C4267: '=': conversion from 'size_t' to 'uint32_t', possible loss of data
+c:\users\-\desktop\consoles\ps4_project1\windowsmain\mainwin.cpp(585): warning C4305: 'argument': truncation from 'double' to 'GLclampf'
+c:\users\-\desktop\consoles\ps4_project1\windowsmain\mainwin.cpp(714): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
+c:\users\-\desktop\consoles\ps4_project1\windowsmain\mainwin.cpp(715): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
+c:\users\-\desktop\consoles\ps4_project1\windowsmain\mainwin.cpp(778): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+c:\users\-\desktop\consoles\ps4_project1\windowsmain\mainwin.cpp(834): warning C4244: 'argument': conversion from 'size_t' to 'float', possible loss of data
+c:\users\-\desktop\consoles\ps4_project1\windowsmain\mainwin.cpp(844): warning C4244: 'argument': conversion from 'size_t' to 'float', possible loss of data
+c:\users\-\desktop\consoles\ps4_project1\windowsmain\mainwin.cpp(924): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+  Generating code
+  606 of 606 functions (100.0%) were compiled.
+    584 functions were new in current compilation
+    0 functions had inline decision re-evaluated but remain unchanged
+  Finished generating code
+  WindowsMain.vcxproj -> C:\Users\-\Desktop\Consoles\PS4_Project1\x64\Release\WindowsMain.exe

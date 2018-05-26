@@ -282,7 +282,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
 
 #ifndef _DEBUG
-		ToggleFullscreen(hWnd);
+		//ToggleFullscreen(hWnd);
 #endif
 
 	}
