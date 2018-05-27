@@ -1,0 +1,6 @@
+﻿  Game.cpp
+C:\Users\Alumno\Documents\ConsoleProjects\PS4_Project1\Game\Game.cpp(1,9): warning : #pragma once in main file [-Wpragma-once-outside-header]
+  imgui.cpp
+  imgui_demo.cpp
+  imgui_draw.cpp
+  Game.vcxproj -> C:\Users\Alumno\Documents\ConsoleProjects\PS4_Project1\ORBIS_Release\Game.a

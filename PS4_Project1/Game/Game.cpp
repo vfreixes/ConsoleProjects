@@ -7,7 +7,8 @@
 #include <vector>
 #include <algorithm>
 
-#define BALLS_MAX 10
+#define BALLS_MAX_X 100
+#define BALLS_MAX_Y 50
 #define K0 0.99f
 using namespace Game;
 using namespace Utilities;
@@ -18,16 +19,16 @@ GameData *Game::CreateGameData() {
 	
 	GameObject* ball;
 	
-	for (int i = 0; i < BALLS_MAX/2; ++i)
+	for (int i = 0; i < BALLS_MAX_X; ++i)
 	{
-		for (int j = 0; j < BALLS_MAX/2; ++j)
+		for (int j = 0; j < BALLS_MAX_Y; ++j)
 		{
 			ball = new GameObject;
-			ball->pos = glm::vec2(-100 + 100 * i, -100 + 100 * j);
+			ball->pos = glm::vec2(-750 + ((750 * 2) / BALLS_MAX_X) * i, -400 + ((800 * 2) / BALLS_MAX_Y) * j);
 			ball->vel = glm::vec2(-40, 0);
 			ball->mass = 1;
 			ball->invMass = 1 / ball->mass;
-			ball->radi = 10;
+			ball->radi = 2;
 			gameData->balls.push_back(ball);
 		}
 	}
@@ -383,7 +384,7 @@ RenderCommands Game::Update(Input const &input, GameData &gameData, Utilities::P
 	for (int i = 0; i < gameData.balls.size(); i++)
 	{
 		sprite.position = gameData.balls[i]->pos;
-		sprite.size = glm::vec2(20, 20);
+		sprite.size = glm::vec2(gameData.balls[i]->radi * 2, gameData.balls[i]->radi * 2);
 		if (i == 0) sprite.texture = RenderCommands::TextureNames::PLAYER;
 		else sprite.texture = RenderCommands::TextureNames::BALLS;
 		result.sprites.push_back(sprite);
@@ -471,7 +472,7 @@ RenderCommands Game::Update(Input const &input, GameData &gameData) {
 	for (int i = 0; i < gameData.balls.size(); i++)
 	{
 		sprite.position = gameData.balls[i]->pos;
-		sprite.size = glm::vec2(20, 20);
+		sprite.size = glm::vec2(gameData.balls[i]->radi * 2, gameData.balls[i]->radi * 2);
 		if (i == 0) sprite.texture = RenderCommands::TextureNames::PLAYER;
 		else sprite.texture = RenderCommands::TextureNames::BALLS;
 		result.sprites.push_back(sprite);

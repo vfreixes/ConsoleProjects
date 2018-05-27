@@ -1,16 +1,6 @@
-﻿  MainWin.cpp
-c:\users\-\desktop\consoles\ps4_project1\windowsmain\mainwin.cpp(444): warning C4267: '=': conversion from 'size_t' to 'uint32_t', possible loss of data
-c:\users\-\desktop\consoles\ps4_project1\windowsmain\mainwin.cpp(445): warning C4267: '=': conversion from 'size_t' to 'uint32_t', possible loss of data
-c:\users\-\desktop\consoles\ps4_project1\windowsmain\mainwin.cpp(582): warning C4305: 'argument': truncation from 'double' to 'GLclampf'
-c:\users\-\desktop\consoles\ps4_project1\windowsmain\mainwin.cpp(708): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
-c:\users\-\desktop\consoles\ps4_project1\windowsmain\mainwin.cpp(709): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
-c:\users\-\desktop\consoles\ps4_project1\windowsmain\mainwin.cpp(771): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
-c:\users\-\desktop\consoles\ps4_project1\windowsmain\mainwin.cpp(822): warning C4244: 'argument': conversion from 'size_t' to 'float', possible loss of data
-c:\users\-\desktop\consoles\ps4_project1\windowsmain\mainwin.cpp(832): warning C4244: 'argument': conversion from 'size_t' to 'float', possible loss of data
-c:\users\-\desktop\consoles\ps4_project1\windowsmain\mainwin.cpp(902): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-  Generating code
-  1 of 612 functions ( 0.2%) were compiled, the rest were copied from previous compilation.
+﻿  Generating code
+  0 of 614 functions ( 0.0%) were compiled, the rest were copied from previous compilation.
     0 functions were new in current compilation
-    2 functions had inline decision re-evaluated but remain unchanged
+    0 functions had inline decision re-evaluated but remain unchanged
   Finished generating code
-  WindowsMain.vcxproj -> C:\Users\-\Desktop\Consoles\PS4_Project1\x64\Release\WindowsMain.exe
+  WindowsMain.vcxproj -> C:\Users\Alumno\Documents\ConsoleProjects\PS4_Project1\x64\Release\WindowsMain.exe
