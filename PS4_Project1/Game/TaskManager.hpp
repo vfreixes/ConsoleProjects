@@ -262,7 +262,8 @@ namespace Utilities
 			JobQueue queues[3];
 			
 			// fibers corresponents als Schedulers
-			void* rootFibers[7];
+			static constexpr int MaxNumThreads = 16;
+			void* rootFibers[MaxNumThreads];
 
 			// fibers
 			void* fibers[NumFibers];
