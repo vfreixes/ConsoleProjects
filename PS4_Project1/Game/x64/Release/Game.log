@@ -1,2 +1,2 @@
 ﻿  Game.cpp
-  Game.vcxproj -> C:\Users\Alumno\Documents\ConsoleProjects\PS4_Project1\x64\Release\Game.lib
+c:\users\alumno\documents\consoleprojects\ps4_project1\game\game.cpp : fatal error C1041: cannot open program database 'C:\Users\Alumno\Documents\ConsoleProjects\PS4_Project1\Game\x64\Release\Game.pdb'; if multiple CL.EXE write to the same .PDB file, please use /FS

@@ -297,7 +297,7 @@ ContactData GenerateContactData(GameObject* cg1, GameObject* cg2) {
 
 
 //Update windows
-RenderCommands Game::Update(Input const &input, GameData &gameData, Utilities::Profiler &profiler) {
+RenderCommands Game::Update(Input const &input, GameData &gameData, Utilities::Profiler &profiler, const Utilities::TaskManager::JobContext &context) {
 
 	const float k0 = K0; // % de velocitat que es manté cada segon
 
@@ -315,6 +315,7 @@ RenderCommands Game::Update(Input const &input, GameData &gameData, Utilities::P
 	profiler.AddProfileMark(Utilities::Profiler::MarkerType::BEGIN_FUNCTION, 0, "movement");
 
 	int i = 0;
+
 	for (const auto& ball : gameData.prevBalls)
 	{
 		glm::vec2 f = { 0 , 0 };
@@ -371,9 +372,21 @@ RenderCommands Game::Update(Input const &input, GameData &gameData, Utilities::P
 
 	std::vector<ContactGroup> contactGroup = GenerateContactGroups(contactData);
 
-	for (ContactGroup group : contactGroup) {
+	// paralel
+	auto job = Utilities::TaskManager::CreateLambdaJob(
+		[&contactGroup](int i, const Utilities::TaskManager::JobContext& context)
+	{
+		SolveCollissionGroup(contactGroup[i]);
+	},
+		"grup solver",
+		contactGroup.size() // nº de vegades que es farà la tasca.
+		);
+
+	context.DoAndWait(&job);
+
+	/*for (ContactGroup group : contactGroup) {
 		SolveCollissionGroup(group);
-	}
+	}*/
 	profiler.AddProfileMark(Utilities::Profiler::MarkerType::END_FUNCTION, 0, "colision");
 	profiler.AddProfileMark(Utilities::Profiler::MarkerType::END, 0, "BallCollision");
 	

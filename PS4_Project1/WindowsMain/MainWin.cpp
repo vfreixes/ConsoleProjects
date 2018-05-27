@@ -533,8 +533,7 @@ void init(Game::Input &inputData, Game::GameData *&gameData, Game::RenderCommand
 		new(&workerThread[i]) std::thread(WorkerThread, i);
 	}
 
-	std::mutex frameLockMutex;
-	std::condition_variable frameLockConditionVariable;
+	
 
 	//Init gameData
 	renderCommands.orthoWidth = screenWidth;
@@ -865,6 +864,10 @@ int __stdcall WinMain(__in HINSTANCE hInstance, __in_opt HINSTANCE hPrevInstance
 	if (!RegisterClass(&wc))
 		return 1;
 	HWND hWnd = CreateWindowW(wc.lpszClassName, L"Billar", WS_OVERLAPPEDWINDOW | WS_VISIBLE, 0, 0, screenWidth, screenHeight, 0, 0, hInstance, 0);
+
+	//Multithread
+	std::mutex frameLockMutex;
+	std::condition_variable frameLockConditionVariable;
 	
 	//Time
 	LARGE_INTEGER l_LastFrameTime;
@@ -920,7 +923,33 @@ int __stdcall WinMain(__in HINSTANCE hInstance, __in_opt HINSTANCE hPrevInstance
 	//Bucle principal
 	do
 	{
-		
+		LARGE_INTEGER PerfCountFrequencyResult;
+		QueryPerformanceFrequency(&PerfCountFrequencyResult);
+		l_PerfCountFrequency = PerfCountFrequencyResult.QuadPart;
+
+		int64_t l_TicksPerFrame = l_PerfCountFrequency / 60;
+
+		LARGE_INTEGER l_CurrentTime;
+		QueryPerformanceCounter(&l_CurrentTime);
+
+		if (l_LastFrameTime.QuadPart + l_TicksPerFrame > l_CurrentTime.QuadPart)
+		{
+			int64_t ticksToSleep = l_LastFrameTime.QuadPart + l_TicksPerFrame - l_CurrentTime.QuadPart;
+			int64_t msToSleep = 1000 * ticksToSleep / l_PerfCountFrequency;
+			if (msToSleep > 0)
+			{
+				Sleep((DWORD)msToSleep);
+			}
+			continue;
+		}
+		while (l_LastFrameTime.QuadPart + l_TicksPerFrame <= l_CurrentTime.QuadPart)
+		{
+			l_LastFrameTime.QuadPart += l_TicksPerFrame;
+		}
+
+		input.dt = (double)l_TicksPerFrame / (double)l_PerfCountFrequency;
+
+
 		ImGui::NewFrame();
 		manageInput(msg, quit, input);
 
@@ -952,8 +981,50 @@ int __stdcall WinMain(__in HINSTANCE hInstance, __in_opt HINSTANCE hPrevInstance
 			input.direction = { 100, 100 };
 		}
 	
-		renderCommands = Game::Update(input, *gameData, profiler);
+		// update
 
+		bool hasFinishedUpdating = false;
+
+		auto updateJob = Utilities::TaskManager::CreateLambdaJob([&](int, const Utilities::TaskManager::JobContext &context)
+		{
+			
+			for (int i = 0; i < numFramesElapsed; ++i)
+			{
+				input.dt = (float)l_TicksPerFrame / (float)l_PerfCountFrequency;
+
+				Game::Update(input, *gameData, profiler, context);
+
+				input.clickDown = false;
+				input.clickDownRight = false;
+
+				LARGE_INTEGER l_UpdateTime;
+				QueryPerformanceCounter(&l_UpdateTime);
+				int64_t updateTicks = l_UpdateTime.QuadPart - l_CurrentTime.QuadPart;
+				double ticksPerUpdate = (double)updateTicks / (i + 1);
+				if (ticksPerUpdate * (i + 2) > l_TicksPerFrame)
+				{
+					break;
+				}
+			}
+			{
+				std::unique_lock<std::mutex> lock(frameLockMutex);
+				hasFinishedUpdating = true;
+			}
+			frameLockConditionVariable.notify_all();
+		}, "Update", 1, 0, Utilities::TaskManager::Job::Priority::HIGH, true);
+
+		jobScheduler.Do(&updateJob, nullptr);
+
+		{
+			std::unique_lock<std::mutex> lock(frameLockMutex);
+
+			while (!hasFinishedUpdating)
+			{
+				frameLockConditionVariable.wait(lock);
+			}
+		}
+
+		
 		if (s_OpenGLRenderingContext != nullptr) {
 			profiler.AddProfileMark(Utilities::Profiler::MarkerType::BEGIN, 0, "Render");
 			profiler.AddProfileMark(Utilities::Profiler::MarkerType::BEGIN_FUNCTION, 0, "render");
@@ -971,31 +1042,7 @@ int __stdcall WinMain(__in HINSTANCE hInstance, __in_opt HINSTANCE hPrevInstance
 		}
 
 
-		LARGE_INTEGER PerfCountFrequencyResult;
-		QueryPerformanceFrequency(&PerfCountFrequencyResult);
-		l_PerfCountFrequency = PerfCountFrequencyResult.QuadPart;
-
-		int64_t l_TicksPerFrame = l_PerfCountFrequency / 60;
-
-		LARGE_INTEGER l_CurrentTime;
-		QueryPerformanceCounter(&l_CurrentTime);
-
-		if (l_LastFrameTime.QuadPart + l_TicksPerFrame > l_CurrentTime.QuadPart)
-		{
-			int64_t ticksToSleep = l_LastFrameTime.QuadPart + l_TicksPerFrame - l_CurrentTime.QuadPart;
-			int64_t msToSleep = 1000 * ticksToSleep / l_PerfCountFrequency;
-			if (msToSleep > 0)
-			{
-				Sleep((DWORD)msToSleep);
-			}
-			continue;
-		}
-		while (l_LastFrameTime.QuadPart + l_TicksPerFrame <= l_CurrentTime.QuadPart)
-		{
-			l_LastFrameTime.QuadPart += l_TicksPerFrame;
-		}
-
-		input.dt = (double)l_TicksPerFrame / (double)l_PerfCountFrequency;
+		
 		ImGui::EndFrame();
 	} while (!quit);
 

@@ -5,6 +5,8 @@
 #include <glm\glm.hpp>
 #include "Profiler.h"
 #include "TaskManager.inl.hpp"
+#include "TaskManagerHelpers.hpp"
+#include "ThreadsafeStructures.hpp"
 
 namespace Game {
 	struct  GameData;
@@ -41,7 +43,7 @@ namespace Game {
 	};
 
 	GameData* CreateGameData();
-	RenderCommands Update(Input const &inuput, GameData &gameData, Utilities::Profiler &profiler);
+	RenderCommands Update(Input const &inuput, GameData &gameData, Utilities::Profiler &profiler, const Utilities::TaskManager::JobContext &context);
 	RenderCommands Update(Input const &inuput, GameData &gameData);
 	void DestroyGameData(GameData* gameData);
 
