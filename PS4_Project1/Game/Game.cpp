@@ -10,6 +10,7 @@
 #define BALLS_MAX 10
 #define K0 0.99f
 using namespace Game;
+using namespace Utilities;
 
 GameData *Game::CreateGameData() {
 
@@ -295,7 +296,7 @@ ContactData GenerateContactData(GameObject* cg1, GameObject* cg2) {
 
 
 
-RenderCommands Game::Update(Input const &input, GameData &gameData) {
+RenderCommands Game::Update(Input const &input, GameData &gameData, Utilities::Profiler &profiler) {
 
 	const float k0 = K0; // % de velocitat que es manté cada segon
 
@@ -308,6 +309,10 @@ RenderCommands Game::Update(Input const &input, GameData &gameData) {
 	RenderCommands::Sprite sprite = {};
 
 	//update balls
+
+	profiler.AddProfileMark(Utilities::Profiler::MarkerType::BEGIN, 0, "BallPositions");
+	profiler.AddProfileMark(Utilities::Profiler::MarkerType::BEGIN_FUNCTION, 0, "movement");
+
 	int i = 0;
 	for (const auto& ball : gameData.prevBalls)
 	{
@@ -340,6 +345,12 @@ RenderCommands Game::Update(Input const &input, GameData &gameData) {
 		i++;
 	}
 
+	profiler.AddProfileMark(Utilities::Profiler::MarkerType::END_FUNCTION, 0, "movement");
+	profiler.AddProfileMark(Utilities::Profiler::MarkerType::END, 0, "BallPositions");
+
+
+	profiler.AddProfileMark(Utilities::Profiler::MarkerType::BEGIN, 0, "BallCollision");
+	profiler.AddProfileMark(Utilities::Profiler::MarkerType::BEGIN_FUNCTION, 0, "colision");
 	std::vector<PossibleCollision> possibleCollisions = SortAndSweep(gameData.balls);
 	
 	std::vector<ContactData> contactData;
@@ -362,8 +373,13 @@ RenderCommands Game::Update(Input const &input, GameData &gameData) {
 	for (ContactGroup group : contactGroup) {
 		SolveCollissionGroup(group);
 	}
+	profiler.AddProfileMark(Utilities::Profiler::MarkerType::END_FUNCTION, 0, "colision");
+	profiler.AddProfileMark(Utilities::Profiler::MarkerType::END, 0, "BallCollision");
+	
 	//sprites
 
+	profiler.AddProfileMark(Utilities::Profiler::MarkerType::BEGIN, 0, "UpdateSprite");
+	profiler.AddProfileMark(Utilities::Profiler::MarkerType::BEGIN_FUNCTION, 0, "sprites");
 	for (int i = 0; i < gameData.balls.size(); i++)
 	{
 		sprite.position = gameData.balls[i]->pos;
@@ -372,6 +388,9 @@ RenderCommands Game::Update(Input const &input, GameData &gameData) {
 		else sprite.texture = RenderCommands::TextureNames::BALLS;
 		result.sprites.push_back(sprite);
 	}
+	profiler.AddProfileMark(Utilities::Profiler::MarkerType::END_FUNCTION, 0, "sprites");
+	profiler.AddProfileMark(Utilities::Profiler::MarkerType::END, 0, "UpdateSprite");
+	
 
 	return result;
 }

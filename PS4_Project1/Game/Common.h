@@ -3,6 +3,7 @@
 #include <cinttypes>
 #include <vector>
 #include <glm\glm.hpp>
+#include "Profiler.h"
 
 namespace Game {
 	struct  GameData;
@@ -37,7 +38,7 @@ namespace Game {
 	};
 
 	GameData* CreateGameData();
-	RenderCommands Update(Input const &inuput, GameData &gameData);
+	RenderCommands Update(Input const &inuput, GameData &gameData, Utilities::Profiler &profiler);
 	void DestroyGameData(GameData* gameData);
 
 

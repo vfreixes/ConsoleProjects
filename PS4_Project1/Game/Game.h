@@ -12,7 +12,7 @@ namespace Game {
 		glm::vec2 pos, vel;
 		float radi, mass, invMass;
 
-		glm::vec2 GetExtreme(glm::vec2 dir/*, glm::vec2 pos, float radi*/) const { return pos + dir * radi; }
+		glm::vec2 GetExtreme(glm::vec2 dir) const { return pos + dir * radi; }
 	};
 
 

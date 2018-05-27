@@ -2,7 +2,6 @@
 
 #include "../Game/Common.h"
 #include "../Game/imgui.h"
-#include "../Game/Profiler.h"
 
 #include <GL/glew.h>
 #include <GL/wglew.h>
@@ -80,7 +79,6 @@ struct FullFile
 
 static HGLRC s_OpenGLRenderingContext = nullptr;
 static HDC s_WindowHandleToDeviceContext;
-
 
 
 inline FullFile ReadFullFile(const wchar_t* path)
@@ -318,7 +316,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	}
 	return 0;
 }
-
 
 bool CompileShader(GLint &shaderId_, const char* shaderCode, GLenum shaderType) {
 	shaderId_ = glCreateShader(shaderType);
@@ -721,7 +718,6 @@ inline bool HandleMouse(const MSG& msg, Game::Input &data_)
 	}
 }
 
-
 void manageInput(MSG& msg, bool &quit, Game::Input &input) {
 	
 	while (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
@@ -784,7 +780,7 @@ int __stdcall WinMain(__in HINSTANCE hInstance, __in_opt HINSTANCE hPrevInstance
 	//Game and input
 	Game::GameData *gameData = Game::CreateGameData();
 	Game::Input input = {};
-	Game::RenderCommands renderCommands = Game::Update(input, *gameData);
+	Game::RenderCommands renderCommands;
 	
 	//Renderer
 	RendererData rendererData;
@@ -868,14 +864,10 @@ int __stdcall WinMain(__in HINSTANCE hInstance, __in_opt HINSTANCE hPrevInstance
 			input.direction = { 100, 100 };
 		}
 
-		profiler.AddProfileMark(Utilities::Profiler::MarkerType::BEGIN, 0, "Update");
-		profiler.AddProfileMark(Utilities::Profiler::MarkerType::BEGIN_FUNCTION, 0, "GameUpdate");
+		
+		renderCommands = Game::Update(input, *gameData, profiler);
 
-		renderCommands = Game::Update(input, *gameData);
-
-		profiler.AddProfileMark(Utilities::Profiler::MarkerType::END_FUNCTION, 0, "GameUpdate");
-		profiler.AddProfileMark(Utilities::Profiler::MarkerType::END, 0, "Update");
-
+		
 
 
 		/*profiler.AddProfileMark(Utilities::Profiler::MarkerType::BEGIN, 0, "FOR");
