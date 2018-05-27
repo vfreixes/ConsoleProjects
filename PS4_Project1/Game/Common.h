@@ -39,6 +39,7 @@ namespace Game {
 
 	GameData* CreateGameData();
 	RenderCommands Update(Input const &inuput, GameData &gameData, Utilities::Profiler &profiler);
+	RenderCommands Update(Input const &inuput, GameData &gameData);
 	void DestroyGameData(GameData* gameData);
 
 

@@ -49,7 +49,7 @@ namespace Utilities
 			if (ImGui::Begin("Profiler"))
 			{
 				ImGui::Checkbox("Record", &recordNewFrame);
-				ImGui::SliderFloat("Scale", &millisecondLength, 20, 10000, "%.3f", 5);
+				ImGui::SliderFloat("Scale", &millisecondLength, 20, 100000, "%.3f", 5);
 
 				ImGui::BeginChild("scrolling", ImVec2(0, 0), false, ImGuiWindowFlags_HorizontalScrollbar);
 

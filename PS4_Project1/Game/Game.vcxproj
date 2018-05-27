@@ -114,6 +114,9 @@
     <ClInclude Include="Common.h" />
     <ClInclude Include="Game.h" />
     <ClInclude Include="Profiler.h" />
+    <ClInclude Include="TaskManager.hpp" />
+    <ClInclude Include="TaskManager.inl.hpp" />
+    <ClInclude Include="ThreadsafeStructures.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Game.cpp" />

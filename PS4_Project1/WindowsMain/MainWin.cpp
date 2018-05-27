@@ -608,10 +608,7 @@ void render(RendererData &rendererData, Game::RenderCommands &renderCommands) {
 		glDrawElements(GL_TRIANGLES, rendererData.quadVAO.numIndices, GL_UNSIGNED_SHORT, 0);
 	}
 
-	profiler.DrawProfilerToImGUI(1);
-	ImGui::Render();
-	RenderDearImgui(rendererData);
-	SwapBuffers(s_WindowHandleToDeviceContext);
+	
 }
 
 void initIMGUI(RendererData &renderer) {
@@ -821,19 +818,14 @@ int __stdcall WinMain(__in HINSTANCE hInstance, __in_opt HINSTANCE hPrevInstance
 	io.KeyMap[ImGuiKey_V] = 'V';
 	io.KeyMap[ImGuiKey_X] = 'X';
 	io.KeyMap[ImGuiKey_Y] = 'Y';
-	io.KeyMap[ImGuiKey_Z] = 'Z';
-	
-	
-	//Utilities::Profiler profiler;
-	 // hem de marcar una tasca per a que el profiler funcioni.
-	
+	io.KeyMap[ImGuiKey_Z] = 'Z';	
 	io.DisplaySize = ImVec2(screenWidth, screenHeight);
+
 	//Bucle principal
 	do
 	{
 		
 		ImGui::NewFrame();
-		//profiler.AddProfileMark(Utilities::Profiler::MarkerType::BEGIN, 0, "Main");
 		manageInput(msg, quit, input);
 
 		io.DeltaTime = input.dt;
@@ -863,28 +855,23 @@ int __stdcall WinMain(__in HINSTANCE hInstance, __in_opt HINSTANCE hPrevInstance
 		if (keyboard[VK_RETURN]) {
 			input.direction = { 100, 100 };
 		}
-
-		
+	
 		renderCommands = Game::Update(input, *gameData, profiler);
 
-		
-
-
-		/*profiler.AddProfileMark(Utilities::Profiler::MarkerType::BEGIN, 0, "FOR");
-		profiler.AddProfileMark(Utilities::Profiler::MarkerType::BEGIN_FUNCTION, 0, "testfor");
-
-		for (int i = 0; i < 1000; i++)
-		{
-			if (i == 499) {
-				profiler.CreateProfileMarkGuard("testfor");
-			}
-		}
-
-		profiler.AddProfileMark(Utilities::Profiler::MarkerType::END_FUNCTION, 0, "testfor");
-		profiler.AddProfileMark(Utilities::Profiler::MarkerType::END, 0, "FOR");*/
-
 		if (s_OpenGLRenderingContext != nullptr) {
+			profiler.AddProfileMark(Utilities::Profiler::MarkerType::BEGIN, 0, "Render");
+			profiler.AddProfileMark(Utilities::Profiler::MarkerType::BEGIN_FUNCTION, 0, "render");
+
 			render(rendererData, renderCommands);
+
+			profiler.AddProfileMark(Utilities::Profiler::MarkerType::END_FUNCTION, 0, "render");
+			profiler.AddProfileMark(Utilities::Profiler::MarkerType::END, 0, "Render");
+			
+			//render profiler
+			profiler.DrawProfilerToImGUI(1);
+			ImGui::Render();
+			RenderDearImgui(rendererData);
+			SwapBuffers(s_WindowHandleToDeviceContext);
 		}
 
 
@@ -896,7 +883,6 @@ int __stdcall WinMain(__in HINSTANCE hInstance, __in_opt HINSTANCE hPrevInstance
 
 		LARGE_INTEGER l_CurrentTime;
 		QueryPerformanceCounter(&l_CurrentTime);
-		//float Result = ((float)(l_CurrentTime.QuadPart - l_LastFrameTime.QuadPart) / (float)l_PerfCountFrequency);
 
 		if (l_LastFrameTime.QuadPart + l_TicksPerFrame > l_CurrentTime.QuadPart)
 		{
@@ -914,7 +900,6 @@ int __stdcall WinMain(__in HINSTANCE hInstance, __in_opt HINSTANCE hPrevInstance
 		}
 
 		input.dt = (double)l_TicksPerFrame / (double)l_PerfCountFrequency;
-		//profiler.AddProfileMark(Utilities::Profiler::MarkerType::END, 0, "Main");
 		ImGui::EndFrame();
 	} while (!quit);
 

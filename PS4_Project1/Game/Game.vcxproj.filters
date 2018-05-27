@@ -20,6 +20,15 @@
     <ClInclude Include="Profiler.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="TaskManager.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TaskManager.inl.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ThreadsafeStructures.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Game.cpp">
