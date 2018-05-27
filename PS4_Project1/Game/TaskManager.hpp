@@ -12,6 +12,7 @@
 #include <chrono>
 
 #include "ThreadsafeStructures.hpp"
+#include "Profiler.h"
 
 namespace Utilities
 {
@@ -41,7 +42,7 @@ namespace Utilities
 			void Wait(Job* job) const;
 			void DoAndWait(Job* job) const;
 
-			void PrintDebug(const char*) const; // implementar en un fitxer platform-dependant.
+			//void PrintDebug(const char*) const; // implementar en un fitxer platform-dependant.
 			
 			// wrapper al profiler per a indicar correctament el thread actual.
 			Profiler::MarkGuard CreateProfileMarkGuard(const char* functionName, int systemID = -1) const
@@ -259,9 +260,9 @@ namespace Utilities
 
 			// cues de feina. Cada una per a una prioritat.
 			JobQueue queues[3];
-
+			
 			// fibers corresponents als Schedulers
-			void* rootFibers[MaxNumThreads];
+			void* rootFibers[7];
 
 			// fibers
 			void* fibers[NumFibers];

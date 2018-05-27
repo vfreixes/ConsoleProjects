@@ -4,9 +4,12 @@
 #include <vector>
 #include <glm\glm.hpp>
 #include "Profiler.h"
+#include "TaskManager.inl.hpp"
 
 namespace Game {
 	struct  GameData;
+
+
 
 	struct Input
 	{

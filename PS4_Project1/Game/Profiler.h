@@ -1,3 +1,5 @@
+#pragma once
+
 #include <chrono>
 #include <atomic>
 #include <string>
@@ -379,7 +381,7 @@ namespace Utilities
 	private:
 
 		static constexpr int ProfilerMarkerBufferSize = 16 * 1024;
-		static constexpr int MaxNumThreads = 1;
+		static constexpr int MaxNumThreads = 16;
 
 		struct ProfileMarker
 		{

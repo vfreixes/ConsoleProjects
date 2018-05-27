@@ -21,6 +21,7 @@
 #include "stb\stb_image.h"
 
 
+
 #define GET_X_LPARAM(lp) ((int)(short)LOWORD(lp))
 #define GET_Y_LPARAM(lp) ((int)(short)HIWORD(lp))
 
@@ -28,7 +29,76 @@ static bool windowActive = true;
 static size_t screenWidth = 1920, screenHeight = 1080;
 bool keyboard[256] = {};
 
+
+class WinJobScheduler : public Utilities::TaskManager::JobScheduler
+{
+public:
+
+
+	void SwitchToFiber(void* fiber) override
+	{
+		::SwitchToFiber(fiber);
+	}
+
+	void* CreateFiber(size_t stackSize, void(__stdcall*call) (void*), void* parameter) override
+	{
+		return ::CreateFiber(stackSize, call, parameter);
+	}
+
+	void* GetFiberData() const override
+	{
+		return ::GetFiberData();
+	}
+};
+
+WinJobScheduler jobScheduler;
 Utilities::Profiler profiler;
+
+inline void SetThreadName(unsigned long dwThreadID, const char* threadName)
+{
+	const DWORD MS_VC_EXCEPTION = 0x406D1388;
+#pragma pack(push,8)  
+	struct
+	{
+		DWORD dwType; // Must be 0x1000.  
+		LPCSTR szName; // Pointer to name (in user addr space).  
+		DWORD dwThreadID; // Thread ID (-1=caller thread).  
+		DWORD dwFlags; // Reserved for future use, must be zero.  
+	} info;
+#pragma pack(pop)  
+
+	info.dwType = 0x1000;
+	info.szName = threadName;
+	info.dwThreadID = dwThreadID;
+	info.dwFlags = 0;
+
+#pragma warning(push)  
+#pragma warning(disable: 6320 6322)  
+	__try {
+		RaiseException(MS_VC_EXCEPTION, 0, sizeof(info) / sizeof(ULONG_PTR), (ULONG_PTR*)&info);
+	}
+	__except (EXCEPTION_EXECUTE_HANDLER) {
+	}
+#pragma warning(pop)  
+}
+
+void __stdcall WorkerThread(int idx)
+{
+	{
+		char buffer[128];
+		sprintf_s(buffer, "Worker Thread %d", idx);
+		SetThreadName(GetCurrentThreadId(), buffer);
+
+		//auto hr = SetThreadAffinityMask(GetCurrentThread(), 1LL << idx);
+		//assert(hr != 0);
+	}
+
+	jobScheduler.SetRootFiber(ConvertThreadToFiber(nullptr), idx);
+
+
+	jobScheduler.RunScheduler(idx, profiler);
+}
+
 
 struct VertexTN
 {
@@ -439,6 +509,32 @@ void init(Game::Input &inputData, Game::GameData *&gameData, Game::RenderCommand
 	//WGL_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB
 	//Init Time
 	QueryPerformanceCounter(&l_LastFrameTime);
+
+	//Init TaskManager
+	// init worker threads
+	int MaxNumThreads = 16;
+
+	unsigned int numHardwareCores = std::thread::hardware_concurrency();
+	numHardwareCores = numHardwareCores > 1 ? numHardwareCores - 1 : 1;
+	int numThreads = (numHardwareCores < MaxNumThreads - 1) ? numHardwareCores : MaxNumThreads - 1;
+	std::thread *workerThread = (std::thread*)alloca(sizeof(std::thread) * numThreads);
+
+	Utilities::TaskManager::JobContext mainThreadContext;// {nullptr, &blockAllocator, numThreads, -1};
+	mainThreadContext.scheduler = nullptr;
+	mainThreadContext.profiler = &profiler;
+	//mainThreadContext.allocator = &blockAllocator;
+	mainThreadContext.threadIndex = numThreads;
+	mainThreadContext.fiberIndex = -1;
+
+	jobScheduler.Init(numThreads, &profiler/*, &blockAllocator*/);
+
+	for (int i = 0; i < numThreads; ++i)
+	{
+		new(&workerThread[i]) std::thread(WorkerThread, i);
+	}
+
+	std::mutex frameLockMutex;
+	std::condition_variable frameLockConditionVariable;
 
 	//Init gameData
 	renderCommands.orthoWidth = screenWidth;
